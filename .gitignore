@@ -1,0 +1,11 @@
+bin
+build
+data
+dist
+include
+lib
+lib64
+*.egg-info
+share
+pyvenv.cfg
+*.log
