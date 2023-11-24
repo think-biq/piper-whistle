@@ -6,9 +6,9 @@ pages:
     - echo "Building documentation ..."
     - make -C docs
     - echo "Exposing as public ..."
-    - mv published public
+    - mv docs/published docs/public
     - echo "Result:"
-    - ls -lav public
+    - ls -lav docs/public
     - echo "Hosting ..."
   artifacts:
     paths:
