@@ -1,0 +1,22 @@
+# The Docker image that will be used to build your app
+image: thinkbiq/ue-plugin-staging:latest
+
+pages:
+  script:
+    - echo "Building documentation ..."
+    - make -C docs
+    - echo "Exposing as public ..."
+    - mv published public
+    - echo "Result:"
+    - ls -lav public
+    - echo "Hosting ..."
+  artifacts:
+    paths:
+      # The folder that contains the files to be exposed at the Page URL
+      - public
+  rules:
+    # This ensures that only pushes to the default branch will trigger
+    # a pages deploy
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
