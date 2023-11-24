@@ -1,0 +1,217 @@
+"""CLI entry point.
+
+CLI handling of piper-whistle commands.
+"""
+# 2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
+import os
+import sys
+import argparse
+import logging
+from . import holz
+from . import db, cmds
+
+
+def create_arg_parser ():
+	"""! Build argparse command line argument parser."""
+
+	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+	# Setup global flags for verbosity level and version print.
+	parser.add_argument('-d', '--debug'
+		, action='store_true'
+		, help='Activate very verbose logging.'
+		, default=False)
+	parser.add_argument('-v', '--verbose'
+		, action='store_true'
+		, help='Activate verbose logging.'
+		, default=False)
+	parser.add_argument('-V', '--version'
+		, action='store_true'
+		, help='Show version number.'
+		, default=False)
+	parser.add_argument('-R', '--refresh'
+		, action='store_true'
+		, help='Refreshes (or sets up) language index by downloading the latest lookup.'
+		, default=False)
+
+	# Split object for subparsers.
+	subparsers = parser.add_subparsers(dest='command')
+
+	# Setup record command and options.
+	guess_args = subparsers.add_parser('guess')
+	guess_args.add_argument('-v', '--verbose'
+		, action='store_true'
+		, help='Activate verbose logging.'
+		, default=False)
+	guess_args.add_argument('language_name', type=str
+		, help='A string representing a language name (or code).'
+		, default='')
+
+	# Setup record command and options.
+	selector_args = subparsers.add_parser('path')
+	selector_args.add_argument('-v', '--verbose'
+		, action='store_true'
+		, help='Activate verbose logging.'
+		, default=False)
+	selector_args.add_argument('voice_selector', type=str
+		, help='Selector of voice to search.'
+		, default='')
+
+	# Setup record command and options.
+	speak_args = subparsers.add_parser('speak')
+	speak_args.add_argument('something', type=str
+		, help='Something to speak.'
+		, default='')
+	speak_args.add_argument('-c', '--channel'
+		, type=str
+		, help='Path to channel (named pipe (aka. fifo)) to which piper is listening.'
+		, default='/opt/wind/channels/speak')
+	speak_args.add_argument('-j', '--json'
+		, action='store_true'
+		, help='Encode the text as json payload. Is on by default.'
+		, default=True)
+	speak_args.add_argument('-r', '--raw'
+		, action='store_true'
+		, help='Encode the text directly.'
+		, default=False)	
+	speak_args.add_argument('-o', '--output'
+		, type=str
+		, help='Instead of streaming to audio channel, specifies a path to wav file where speech will be store in.'
+		, default=None)
+	speak_args.add_argument('-v', '--verbose'
+		, action='store_true'
+		, help='Activate verbose logging.'
+		, default=False)
+
+	# Setup record command and options.
+	list_args = subparsers.add_parser('list')
+	list_args.add_argument('-v', '--verbose'
+		, action='store_true'
+		, help='Activate verbose logging.'
+		, default=False)
+	list_args.add_argument('-I', '--installed'
+		, action='store_true'
+		, help='Only list installed voices.'
+		, default=False)
+	list_args.add_argument('-a', '--all'
+		, action='store_true'
+		, help='List voices for all available languages.'
+		, default=False)
+	list_args.add_argument('-L', '--languages'
+		, action='store_true'
+		, help='List available languages.'
+		, default=False)
+	list_args.add_argument('-p', '--install-path'
+		, action='store_true'
+		, help='List path of voice (if installed).'
+		, default=False)
+	list_args.add_argument('-l', '--language-code'
+		, type=str
+		, help='Only list voices matching this language.'
+		, default='en_GB')
+	list_args.add_argument('-i', '--voice-index'
+		, type=int
+		, help='List only specific language voice.'
+		, default=-1)
+
+	# Setup record command and options.
+	preview_args = subparsers.add_parser('preview')
+	preview_args.add_argument('-v', '--verbose'
+		, action='store_true'
+		, help='Activate verbose logging.'
+		, default=False)
+	preview_args.add_argument('-l', '--language-code'
+		, type=str
+		, help='Select language.'
+		, default='en_GB')
+	preview_args.add_argument('-i', '--voice-index'
+		, type=int
+		, help='Specific language voice. (defaults to first one)'
+		, default=0)
+	preview_args.add_argument('-s', '--speaker-index'
+		, type=int
+		, help='Specific language voice speaker. (defaults to first one)'
+		, default=0)
+	preview_args.add_argument('-D', '--dry-run'
+		, action='store_true'
+		, help='Build URL and simulate download.'
+		, default=False)
+	
+	# Setup record command and options.
+	install_args = subparsers.add_parser('install')
+	install_args.add_argument('-v', '--verbose'
+		, action='store_true'
+		, help='Activate verbose logging.'
+		, default=False)
+	install_args.add_argument('-D', '--dry-run'
+		, action='store_true'
+		, help='Simulate download / install.'
+		, default=False)
+	install_args.add_argument('language_code'
+		, type=str
+		, help='Select language.')
+	install_args.add_argument('voice_index'
+		, type=int
+		, help='Specific language voice. (defaults to first one)')
+
+	return parser
+
+
+def main ():
+	"""! Main CLI processing function."""
+
+	parser = create_arg_parser ()
+	args = parser.parse_args ()
+
+	log_level = logging.WARNING
+	if args.debug:
+		log_level = logging.DEBUG
+	elif args.verbose:
+		log_level = logging.INFO
+	holz.setup_default ('whistle', log_level)
+	holz.normalize ()
+
+	paths = db.data_paths ()
+	repo_info = db.remote_repo_config ()
+	context = db.context_create (paths, repo_info)
+
+	if args.refresh:
+		holz.info ('Refreshing language lookup ...')
+		context = db.index_download_and_rebuild (context)
+		return 0
+
+	if args.version:
+		print (get_version ())
+		return 0
+
+	if None is args.command:
+		parser.print_help()
+		return 1
+
+	if not os.path.exists (paths['index']):
+		holz.info ('No index found. Recreating ...')
+		context = db.index_download_and_rebuild (context)
+
+	commands = {
+		'guess': cmds.run_guess,
+		'path': cmds.run_path,
+		'speak': cmds.run_speak,
+		'list': cmds.run_list,
+		'preview': cmds.run_preview,
+		'install': cmds.run_install
+	}
+
+	if args.command in commands:
+		holz.debug (f'Running command "{args.command}" ...')
+		return commands[args.command] (context, args)
+
+	holz.error (f'Could not find command "{args.command}".')
+
+	parser.print_help ()
+	return 1
+
+
+if __name__ == '__main__':
+	"""! CLI entry point."""
+
+	r = main ()
+	sys.exit (r)
