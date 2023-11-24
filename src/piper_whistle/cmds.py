@@ -40,6 +40,10 @@ def _run_program (params):
 
 
 def _parse_voice_selector (selector):
+	if '-' in selector:
+		code, name, quality = selector.split ('-')
+		return name, quality, 0
+
 	name, rest = selector.split ('@')
 	if '/' in rest:
 		quality, speaker = rest.split ('/')
