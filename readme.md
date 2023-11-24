@@ -1,6 +1,6 @@
 # piper-whistle
 
-Tool to manage voices used with the [piper][1] speech synthesizer.
+Tool to manage voices used with the [piper][1] speech synthesizer. You may also browse the [docs online][2] at https://think-biq.gitlab.io/piper-whistle/
 
 ## usage
 
@@ -153,4 +153,6 @@ and then note the language code and index, so install knows where to look.
 The model file (onnx) as well as its accompanying config (json) file, will be
 stored in the local user data path as provide by [userpaths](https://pypi.org/project/userpaths/). On linux this would be `${HOME}/.config/piper-whistle`.
 
+
 [1]: https://github.com/rhasspy/piper
+[2]: https://think-biq.gitlab.io/piper-whistle/
