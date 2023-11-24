@@ -1,0 +1,14 @@
+#!env python3
+"""    
+    CLI tool to manage piper voices.
+
+    2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
+    See license.md for details.
+
+    https://think-biq.com
+"""
+from src.piper_whistle.cli import main as cli_main
+
+
+if '__main__' == __name__:
+    cli_main ()
