@@ -1,3 +1,4 @@
 html/
 published/
 *.log
+*.live
