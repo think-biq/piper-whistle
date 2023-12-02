@@ -4,4 +4,4 @@
 
 
 def version ():
-	return "1.6.18"
+	return "1.6.23"

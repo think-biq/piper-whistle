@@ -24,13 +24,13 @@ import os
 import sys
 import json
 import requests
-import rich
 import userpaths
 import time
 import urllib
 import pathlib
 from . import holz
 from . import search
+from . import util
 
 
 def data_paths ():
@@ -138,31 +138,51 @@ def index_fetch_raw (repo_info):
 	@return Returns parse json object of voice index.
 	"""
 	url = remote_repo_build_index_url (repo_info)
+
+	holz.info (f'Checking remote file "{url}" ...')
+	r = requests.head (url)
+	if not (300 > r.status_code):
+		holz.info (f'Could not find index file at "{url}".')
+		return None
+
+	s = util.float_round (int (r.headers['Content-Length']) / 1024)
+	holz.info (f'Appears to be present with a size of "{s}kb".')
+
+	holz.info (f'Fetching index file ...')
 	r = requests.get (url)
 	if 300 > r.status_code:
 		return json.loads (r.content.decode ('utf8'))
 	
 	holz.error (f'Could not fetch "{url}"!')
-	rich.inspect (r)
+	try:
+		import rich
+		rich.inspect (r)
+	except:
+		holz.error (f'Skipping verbose response logging. Module "rich" not installed.')
+		pass
+
 	return None
 
 
-def index_download_and_rebuild (context):
+def index_download_and_rebuild (paths = data_paths (), repo_info = remote_repo_config ()):
 	"""! Fetch latest voice index and build lookup database, then recreates context.
 
-	It takes the current context map object, fetches the latest voice information,
-	re-builds the cache / database, re-create the context and returns it.
+	Using the info on data paths and remote repository, it fetches the latest
+	voice information, re-builds the cache / database, creates a context
+	and returns it.
 	
-	@param context Context map containig whistle index and language info. Can be created via @ref "context_create ()".
+	@param context Context map containig whistle index and language info.
+	               Can be created via @ref "context_create ()".
 	
 	@return Returns parse json object of voice index.
 	"""
-	paths = context['paths']
-	repo_info = context['repo']
+	holz.debug ('Ensuring data paths exists ...')
 
+	# Make sure data path exists.
 	with pathlib.Path (paths['data']) as p:
 		p.mkdir (parents = True, exist_ok = True)
 
+	# Make sure voice data storage path exists.
 	with pathlib.Path (paths['voices']) as p:
 		p.mkdir (parents = True, exist_ok = True)
 
@@ -172,13 +192,14 @@ def index_download_and_rebuild (context):
 		holz.error ('Unable to build index.')
 		return None
 
+	holz.info (f"Storing index at '{paths['index']}' ...")
 	with open (paths['index'], 'w') as f:
 		json.dump (index, f, indent = 4)
 
 	holz.info ('Rebuilding language database ...')
 	langdb = {}
 	for voice in index:
-		l = index[voice]['languages']
+		l = index[voice]['language']
 		if not (l['code'] in langdb):
 			langdb[l['code']] = l
 			langdb[l['code']]['voices'] = []
@@ -192,8 +213,29 @@ def index_download_and_rebuild (context):
 	with open (paths['last-updated'], 'w') as f:
 		f.write (f'{last_update}')
 
+	holz.info (f"Database files stored at '{paths['data']}'.")
+
 	holz.info ('Regenerating context ...')
 	return context_create (paths, repo_info)
+
+
+def _context_is_valid (context):
+	paths_ok = ('paths' in context)
+	if not paths_ok:
+		holz.warn ('Data paths appear corrupt.')
+	db_ok = ('db' in context \
+		and ('index' in context['db'] and dict == type (context['db']['index'])) \
+		and ('languages' in context['db'] and dict == type (context['db']['languages'])) \
+	)
+	if not db_ok:
+		holz.warn ('It appears db is corrupt.')
+	repo_ok = ('repo' in context)
+	if not repo_ok:
+		holz.warn ('Remote repository info appears corrupt.')
+
+	return paths_ok \
+		and  db_ok \
+		and repo_ok
 
 
 def context_create (paths = data_paths (), repo_info = remote_repo_config ()):
@@ -214,20 +256,33 @@ def context_create (paths = data_paths (), repo_info = remote_repo_config ()):
 
 	@return Returns voice and language lookups.
 	"""
-	with open (paths['index'], 'r') as f:
-		index = json.load (f)
+	db = {
+		'index': None,
+		'languages': None
+	}
 
-	with open (paths['languages'], 'r') as f:
-		langdb = json.load (f)
+	if not os.path.exists (paths['index']):
+		holz.warn ('No database index found!')
+	else:
+		with open (paths['index'], 'r') as f:
+			db['index'] = json.load (f)
 
-	return {
+	if not os.path.exists (paths['languages']):
+		holz.warn ('No language lookup found!')
+	else:
+		with open (paths['languages'], 'r') as f:
+			db['languages'] = json.load (f)
+
+	context = {
 		'paths': paths,
-		'db': {
-			'index': index,
-			'languages': langdb
-		},
+		'db': db,
 		'repo': repo_info
 	}
+
+	if not _context_is_valid (context):
+		return None
+	
+	return context
 
 
 def context_guess_language_from_name (context, needle):
@@ -247,27 +302,29 @@ def context_guess_language_from_name (context, needle):
 	for lang_code in langdb:
 		matched, c = search.looks_like (needle, lang_code, 0.91, False)
 		if matched:
-			print (f'{needle} ~ {lang_code}')
+			holz.info (f'{needle} ~ {lang_code}')
 			matching_code = lang_code
 			break
 		lang_name_native = langdb[lang_code]['name_native']
 		matched, c = search.looks_like (needle, lang_name_native, 0.8)
 		if matched:
-			print (f'{needle} ~ {lang_name_native} (native)')
+			holz.info (f'{needle} ~ {lang_name_native} (native)')
 			matching_code = lang_code
 			break
 		lang_name_en = langdb[lang_code]['name_english']
 		matched, c = search.looks_like (needle, lang_name_en, 0.8)
 		if matched:
-			print (f'{needle} ~ {lang_name_en} (english)')
+			holz.info (f'{needle} ~ {lang_name_en} (english)')
 			matching_code = lang_code
 			break
 		lang_country = langdb[lang_code]['country_english']
 		matched, c = search.looks_like (needle, lang_country, 0.7)
 		if matched:
-			print (f'{needle} ~ {lang_country}')
 			matching_code = lang_code
+			holz.info (f'{needle} ~ {lang_country}')
 			break
+
+	holz.info (matching_code)
 
 	return matching_code
 

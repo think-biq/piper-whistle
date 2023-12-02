@@ -18,12 +18,13 @@ import os
 import sys
 import json
 import requests
-import rich
 import userpaths
 import time
 import urllib
 import pathlib
-from . import holz, db
+from . import holz
+from . import db
+from . import util
 
 
 def _run_program (params):
@@ -132,6 +133,7 @@ def run_guess (context, args):
 	if matching_code:
 		lang = context['db']['languages'][matching_code]
 		holz.info (f'Best guess for "{target_lang}": {matching_code} ({lang["name_native"]} [{lang["name_english"]}])')
+		sys.stdout.write (matching_code)
 		return 0
 
 	holz.error (f'Could not find anything matching: {target_lang}')
@@ -278,11 +280,14 @@ def run_preview (context, args):
 	index = context['db']['index']
 	langdb = context['db']['languages']
 	
+	holz.info (f'Looking up preview info for {code}:{voice_i}:{speaker_i} ...')
 	speaker_url = None
 	download_info = _assemble_download_info (context, code, voice_i)
 	if download_info:
 		if -1 < speaker_i and speaker_i < len (download_info['samples']):
 			speaker_url = download_info['samples'][speaker_i]
+
+	holz.debug (download_info)
 
 	if not speaker_url:
 		holz.error ('Could not find sample for this voice.')
@@ -319,18 +324,11 @@ def run_preview (context, args):
 				holz.error ('File not found.')
 				return 13
 
-			holz.info (f'Playing {file_path.as_posix ()} ...')
+			sys.stderr.write (f'Playing {file_path.as_posix ()} ...\n')
 			r = _run_program (play_cmd)
 			holz.info (f'Finished with: {r[0]}')
 
 	return 0
-
-
-def _float_round (x, digits = 2):
-	k = 10**digits
-	xx = int (x * k)
-	x = float (xx) / k
-	return x
 
 
 def run_install (context, args):
@@ -358,7 +356,7 @@ def run_install (context, args):
 		config_url = download_info['config']['url']
 		config_file_path = p.joinpath (os.path.basename (config_url))
 		if not config_file_path.exists ():
-			size = _float_round (float (download_info['config']['size']) / 1024)
+			size = util.float_round (float (download_info['config']['size']) / 1024)
 			holz.info (f'Fetching config ({size}kb) ...')
 			if not dry_run:
 				r = requests.get (config_url)
@@ -372,10 +370,12 @@ def run_install (context, args):
 			holz.info ('Config already cached.')
 
 		model_url = download_info['model']['url']
-		model_file_path = p.joinpath (os.path.basename (model_url))
+		model_file_name = os.path.basename (model_url)
+		model_name = model_file_name.split ('.')[0]
+		model_file_path = p.joinpath (model_file_name)
 		if not model_file_path.exists ():
-			size = _float_round (float (download_info['model']['size']) / 1024 / 1024)
-			holz.info (f'Fetching model ({size}mb) ...')
+			size = util.float_round (float (download_info['model']['size']) / 1024 / 1024)
+			holz.info (f'Fetching {model_name} ({size}mb) ...')
 			if not dry_run:
 				r = requests.get (model_url)
 				if 300 > r.status_code:
@@ -387,6 +387,7 @@ def run_install (context, args):
 		else:
 			holz.info ('Model already cached.')
 
-		sys.stdout.write (f'{download_info["selection_name"]}\t{model_file_path}')
+		selector = download_info["selection_name"]
+		sys.stdout.write (f'{selector}\t{model_name}\t{model_file_path}')
 
 	return 0

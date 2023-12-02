@@ -8,7 +8,9 @@ import sys
 import argparse
 import logging
 from . import holz
-from . import db, cmds
+from . import db
+from . import cmds
+from . import util
 
 
 def create_arg_parser ():
@@ -159,7 +161,9 @@ def create_arg_parser ():
 def main ():
 	"""! Main CLI processing function."""
 
+	# Setup and configure argparse parser.
 	parser = create_arg_parser ()
+	# Parse passed arguments.
 	args = parser.parse_args ()
 
 	log_level = logging.WARNING
@@ -167,30 +171,41 @@ def main ():
 		log_level = logging.DEBUG
 	elif args.verbose:
 		log_level = logging.INFO
+	# Setup default log level and initialize holz logging utility.
 	holz.setup_default ('whistle', log_level)
 	holz.normalize ()
-
-	paths = db.data_paths ()
-	repo_info = db.remote_repo_config ()
-	context = db.context_create (paths, repo_info)
-
-	if args.refresh:
-		holz.info ('Refreshing language lookup ...')
-		context = db.index_download_and_rebuild (context)
-		return 0
 
 	if args.version:
 		print (get_version ())
 		return 0
 
+	# Fetch default paths for config and data storage.
+	paths = db.data_paths ()
+	# Fetch details on where to obtain voice data from.
+	repo_info = db.remote_repo_config ()
+	
+	# Check if refresh is requestsed.
+	if args.refresh:
+		holz.info ('Fetching and rebuilding database ...')
+		context = db.index_download_and_rebuild (paths, repo_info)
+		return 0
+
+	# Trying to create new context object. Might fail if database is missing / corrupt.
+	context = db.context_create (paths, repo_info)
+	if not context:
+		holz.error (
+			f'Could not create context. ' \
+			f'Please refresh database using "{sys.argv[0]} -vR"'
+		)
+		parser.print_help()
+		return 1
+
+	# Show help message if no command is provided.
 	if None is args.command:
 		parser.print_help()
 		return 1
 
-	if not os.path.exists (paths['index']):
-		holz.info ('No index found. Recreating ...')
-		context = db.index_download_and_rebuild (context)
-
+	# Build command lookup map.
 	commands = {
 		'guess': cmds.run_guess,
 		'path': cmds.run_path,
@@ -200,12 +215,14 @@ def main ():
 		'install': cmds.run_install
 	}
 
+	# Select command and run it.
 	if args.command in commands:
 		holz.debug (f'Running command "{args.command}" ...')
 		return commands[args.command] (context, args)
 
 	holz.error (f'Could not find command "{args.command}".')
 
+	# Show available commands.
 	parser.print_help ()
 	return 1
 
