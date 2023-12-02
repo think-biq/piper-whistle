@@ -5,3 +5,7 @@
 
 def version ():
 	return "1.6.23"
+
+
+if '__main__' == __name__:
+	print (version ())
