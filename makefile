@@ -7,3 +7,6 @@ PROJECT_DIR := $(realpath -s $(shell dirname $(FILE_PATH)))
 
 docs-build:
 	make -C docs
+
+run-tests:
+	python3 -m unittest $(PROJECT_DIR)/src/testing/functional.py
