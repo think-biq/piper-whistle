@@ -1,6 +1,18 @@
 # The Docker image that will be used to build your app
 image: thinkbiq/ue-plugin-staging:latest
 
+functional-test:
+  script:
+    - python3 -m pip install -U pip
+    - python3 -m pip install -r requirements.dev.txt
+    - python3 -m pip install -r requirements.txt
+    - python3 -m unittest src/testing/functional.py
+  rules:
+    # This ensures that only pushes to the default branch will trigger
+    # a pages deploy
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      allow_failure: true
+
 pages:
   script:
     - echo "Building documentation ..."
@@ -14,6 +26,28 @@ pages:
     paths:
       # The folder that contains the files to be exposed at the Page URL
       - public
+  rules:
+    # This ensures that only pushes to the default branch will trigger
+    # a pages deploy
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+
+sync:
+  script:
+    - apt-get update -y
+    - apt-get install -yqqf openssh-client git unzip sshpass rsync --fix-missing
+    - 'which ssh-agent || ( apt-get update -y && apt-get install -y openssh-client git )'
+    - eval $(ssh-agent -s)
+    - cat "${GITHUB_DEPLOY_KEY_FILE}" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan ${GITHUB_DEPLOY_DOMAIN} >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - git config --global user.email "${GITHUB_USER_EMAIL}"
+    - git config --global user.name "${GITHUB_USER_NAME}"
+    - git remote add sync ${GITHUB_REPO_LINK}
+    - git push sync main
   rules:
     # This ensures that only pushes to the default branch will trigger
     # a pages deploy
