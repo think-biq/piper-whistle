@@ -48,8 +48,10 @@ sync:
     - chmod 644 ~/.ssh/known_hosts
     - git config --global user.email "${GITHUB_USER_EMAIL}"
     - git config --global user.name "${GITHUB_USER_NAME}"
-    - git remote add sync ${GITHUB_REPO_LINK}
-    - git push sync main
+    - git remote rm origin 2> /dev/null && echo "origin remove" || echo "no origin"
+    - git remote add origin ${GITHUB_REPO_LINK}
+    - git push --all
+    - git push --tags
   rules:
     # This ensures that only pushes to the default branch will trigger
     # a pages deploy
