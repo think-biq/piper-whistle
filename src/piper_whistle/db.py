@@ -28,12 +28,13 @@ import userpaths
 import time
 import urllib
 import pathlib
+import tempfile
 from . import holz
 from . import search
 from . import util
 
 
-def data_paths ():
+def data_paths (appdata_root_path = userpaths.get_appdata ()):
 	"""! Query for data paths used by whistle.
 
 	Provides a map of data paths used by whistle.
@@ -44,10 +45,10 @@ def data_paths ():
 	* languages: Language data lookup (JSON), built from index. Uses language code as keys.
 	* last-updated: A flat file containig the timestamp when whistle data was refreshed last.
 	
-
+	@param config_root_path Path to the directory, where applications can store configuration and data.
 	@return Returns a map with respective paths.
 	"""
-	whistle_data_path = os.path.join (userpaths.get_appdata (), 'piper-whistle')
+	whistle_data_path = os.path.join (appdata_root_path, 'piper-whistle')
 	whistle_voices_path = os.path.join (whistle_data_path, 'voices')
 	whistle_voice_index = os.path.join (whistle_data_path, 'index.json')
 	whistle_voice_lookup = os.path.join (whistle_data_path, 'languages.json')
@@ -139,6 +140,7 @@ def index_fetch_raw (repo_info):
 	"""
 	url = remote_repo_build_index_url (repo_info)
 
+	"""
 	holz.info (f'Checking remote file "{url}" ...')
 	r = requests.head (url)
 	if not (300 > r.status_code):
@@ -152,14 +154,16 @@ def index_fetch_raw (repo_info):
 	r = requests.get (url)
 	if 300 > r.status_code:
 		return json.loads (r.content.decode ('utf8'))
-	
-	holz.error (f'Could not fetch "{url}"!')
-	try:
-		import rich
-		rich.inspect (r)
-	except:
-		holz.error (f'Skipping verbose response logging. Module "rich" not installed.')
-		pass
+	"""
+	temp = tempfile.NamedTemporaryFile ()
+	temp_path = temp.name
+	temp.close ()
+
+	r = util.download_as_stream_with_progress (url, temp_path)
+	if 0 < r:
+		holz.debug (f'Finished downloading. "{url}" => "{temp_path}"')
+		with open (temp_path, 'r') as f:
+			return json.loads (f.read ())
 
 	return None
 

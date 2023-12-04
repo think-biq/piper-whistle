@@ -95,7 +95,7 @@ def warn (message, category = None):
 		logger = logging.getLogger (category)
 	else:
 		logger = default_logger
-	logger.warn (message)
+	logger.warning (message)
 
 
 def error (message, category = None):

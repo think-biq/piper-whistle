@@ -28,6 +28,10 @@ from . import util
 
 
 def _run_program (params):
+	"""! Runs external program with given parameters
+	@param params List of parameters to use for program invokation.
+	@return Returns a touple containing (returncode, stdout, stderr)
+	"""
 	holz.debug (f'Running external program: {params}')
 	p = subprocess.Popen (params
 		, bufsize=0
@@ -41,6 +45,10 @@ def _run_program (params):
 
 
 def _parse_voice_selector (selector):
+	"""! Get voice details from selector string.
+	@param selector Voice identifying string.
+	@return Returns a touple containgin (name, quality, speaker) of the voice.
+	"""
 	if '-' in selector:
 		code, name, quality = selector.split ('-')
 		return name, quality, 0
@@ -56,6 +64,33 @@ def _parse_voice_selector (selector):
 
 
 def _assemble_download_info (context, code, voice_i):
+	"""! Compile details used to download voice data.
+
+	The assembled information may look like this:
+	{
+		'langugage': en_GB,
+		'model': {
+			'url': "https://...",
+			'size': 777,
+			'md5': some md5 hash
+		},
+		'config': {
+			'url': "https://...",
+			'size': 777,
+			'md5': some md5 hash
+		},
+		'samples': [
+			list of URLs to a sample voice reading for each speaker
+		],
+		'local_path_relative': /some/local/path,
+		'selection_name': selector name,
+	}	
+
+	@param context Context information and whistle database.
+	@param code Language code of voice to be downloaded.
+	@param voice_i Voice index to be downloaded.
+	@return Returns a map containing download information.
+	"""
 	index = context['db']['index']
 	langdb = context['db']['languages']
 	# For example: "https://huggingface.co/rhasspy/piper-voices/resolve/main"
@@ -359,6 +394,7 @@ def run_install (context, args):
 			size = util.float_round (float (download_info['config']['size']) / 1024)
 			holz.info (f'Fetching config ({size}kb) ...')
 			if not dry_run:
+				"""
 				r = requests.get (config_url)
 				if 300 > r.status_code:
 					with open (config_file_path, 'wb') as f:
@@ -366,6 +402,12 @@ def run_install (context, args):
 				else:
 					holz.error ('Error downloading config.')
 					return 13
+				"""
+				r = util.download_as_stream_with_progress (config_url, config_file_path.as_posix ())
+				if 0 > r:
+					holz.error ('Error downloading config.')
+					return 13
+
 		else:
 			holz.info ('Config already cached.')
 
@@ -377,11 +419,17 @@ def run_install (context, args):
 			size = util.float_round (float (download_info['model']['size']) / 1024 / 1024)
 			holz.info (f'Fetching {model_name} ({size}mb) ...')
 			if not dry_run:
+				"""
 				r = requests.get (model_url)
 				if 300 > r.status_code:
 					with open (model_file_path, 'wb') as f:
 						f.write (r.content)
 				else:
+					holz.error ('Error downloading model.')
+					return 13
+				"""
+				r = util.download_as_stream_with_progress (model_url, model_file_path.as_posix ())
+				if 0 > r:
 					holz.error ('Error downloading model.')
 					return 13
 		else:

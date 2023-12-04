@@ -16,144 +16,182 @@ from . import util
 def create_arg_parser ():
 	"""! Build argparse command line argument parser."""
 
-	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+	# Build top level parser object.
+	parser = argparse.ArgumentParser (
+		formatter_class=argparse.RawTextHelpFormatter
+	)
+
 	# Setup global flags for verbosity level and version print.
-	parser.add_argument('-d', '--debug'
+	parser.add_argument ('-d', '--debug'
 		, action='store_true'
 		, help='Activate very verbose logging.'
-		, default=False)
-	parser.add_argument('-v', '--verbose'
+		, default=False
+	)
+	parser.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
-		, default=False)
-	parser.add_argument('-V', '--version'
+		, default=False
+	)
+	parser.add_argument ('-V', '--version'
 		, action='store_true'
 		, help='Show version number.'
-		, default=False)
-	parser.add_argument('-R', '--refresh'
+		, default=False
+	)
+	parser.add_argument ('-P', '--data-root', type=str
+		, help='Root path where whistle should store config and data in.'
+		, default=None
+	)
+	parser.add_argument ('-R', '--refresh'
 		, action='store_true'
 		, help='Refreshes (or sets up) language index by downloading the latest lookup.'
-		, default=False)
+		, default=False
+	)
 
 	# Split object for subparsers.
-	subparsers = parser.add_subparsers(dest='command')
+	subparsers = parser.add_subparsers (dest='command')
 
-	# Setup record command and options.
-	guess_args = subparsers.add_parser('guess')
-	guess_args.add_argument('-v', '--verbose'
+	# Setup gues command and options.
+	guess_args = subparsers.add_parser ('guess')
+	guess_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
-		, default=False)
-	guess_args.add_argument('language_name', type=str
+		, default=False
+	)
+	guess_args.add_argument ('language_name', type=str
 		, help='A string representing a language name (or code).'
-		, default='')
+		, default=''
+	)
 
-	# Setup record command and options.
-	selector_args = subparsers.add_parser('path')
-	selector_args.add_argument('-v', '--verbose'
+	# Setup path command and options.
+	selector_args = subparsers.add_parser ('path')
+	selector_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
-		, default=False)
-	selector_args.add_argument('voice_selector', type=str
+		, default=False
+	)
+	selector_args.add_argument ('voice_selector', type=str
 		, help='Selector of voice to search.'
-		, default='')
+		, default=''
+	)
 
-	# Setup record command and options.
-	speak_args = subparsers.add_parser('speak')
-	speak_args.add_argument('something', type=str
+	# Setup speak command and options.
+	speak_args = subparsers.add_parser ('speak')
+	speak_args.add_argument ('something', type=str
 		, help='Something to speak.'
-		, default='')
-	speak_args.add_argument('-c', '--channel'
+		, default=''
+	)
+	speak_args.add_argument ('-c', '--channel'
 		, type=str
 		, help='Path to channel (named pipe (aka. fifo)) to which piper is listening.'
-		, default='/opt/wind/channels/speak')
-	speak_args.add_argument('-j', '--json'
+		, default='/opt/wind/channels/speak'
+	)
+	speak_args.add_argument ('-j', '--json'
 		, action='store_true'
 		, help='Encode the text as json payload. Is on by default.'
-		, default=True)
-	speak_args.add_argument('-r', '--raw'
+		, default=True
+	)
+	speak_args.add_argument ('-r', '--raw'
 		, action='store_true'
 		, help='Encode the text directly.'
-		, default=False)	
-	speak_args.add_argument('-o', '--output'
+		, default=False
+	)	
+	speak_args.add_argument ('-o', '--output'
 		, type=str
 		, help='Instead of streaming to audio channel, specifies a path to wav file where speech will be store in.'
-		, default=None)
-	speak_args.add_argument('-v', '--verbose'
+		, default=None
+	)
+	speak_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
-		, default=False)
+		, default=False
+	)
 
-	# Setup record command and options.
-	list_args = subparsers.add_parser('list')
-	list_args.add_argument('-v', '--verbose'
+	# Setup list command and options.
+	list_args = subparsers.add_parser ('list')
+	list_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
-		, default=False)
-	list_args.add_argument('-I', '--installed'
+		, default=False
+	)
+	list_args.add_argument ('-I', '--installed'
 		, action='store_true'
 		, help='Only list installed voices.'
-		, default=False)
-	list_args.add_argument('-a', '--all'
+		, default=False
+	)
+	list_args.add_argument ('-a', '--all'
 		, action='store_true'
 		, help='List voices for all available languages.'
-		, default=False)
-	list_args.add_argument('-L', '--languages'
+		, default=False
+	)
+	list_args.add_argument ('-L', '--languages'
 		, action='store_true'
 		, help='List available languages.'
-		, default=False)
-	list_args.add_argument('-p', '--install-path'
+		, default=False
+	)
+	list_args.add_argument ('-p', '--install-path'
 		, action='store_true'
 		, help='List path of voice (if installed).'
-		, default=False)
-	list_args.add_argument('-l', '--language-code'
+		, default=False
+	)
+	list_args.add_argument ('-l', '--language-code'
 		, type=str
 		, help='Only list voices matching this language.'
-		, default='en_GB')
-	list_args.add_argument('-i', '--voice-index'
+		, default='en_GB'
+	)
+	list_args.add_argument ('-i', '--voice-index'
 		, type=int
 		, help='List only specific language voice.'
-		, default=-1)
+		, default=-1
+	)
 
-	# Setup record command and options.
-	preview_args = subparsers.add_parser('preview')
-	preview_args.add_argument('-v', '--verbose'
+	# Setup preview command and options.
+	preview_args = subparsers.add_parser ('preview')
+	preview_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
-		, default=False)
-	preview_args.add_argument('-l', '--language-code'
+		, default=False
+	)
+	preview_args.add_argument ('-l', '--language-code'
 		, type=str
 		, help='Select language.'
-		, default='en_GB')
-	preview_args.add_argument('-i', '--voice-index'
+		, default='en_GB'
+	)
+	preview_args.add_argument ('-i', '--voice-index'
 		, type=int
 		, help='Specific language voice. (defaults to first one)'
-		, default=0)
-	preview_args.add_argument('-s', '--speaker-index'
+		, default=0
+	)
+	preview_args.add_argument ('-s', '--speaker-index'
 		, type=int
 		, help='Specific language voice speaker. (defaults to first one)'
-		, default=0)
-	preview_args.add_argument('-D', '--dry-run'
+		, default=0
+	)
+	preview_args.add_argument ('-D', '--dry-run'
 		, action='store_true'
 		, help='Build URL and simulate download.'
-		, default=False)
+		, default=False
+	)
 	
-	# Setup record command and options.
-	install_args = subparsers.add_parser('install')
-	install_args.add_argument('-v', '--verbose'
+	# Setup install command and options.
+	install_args = subparsers.add_parser ('install')
+	install_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
-		, default=False)
-	install_args.add_argument('-D', '--dry-run'
+		, default=False
+	)
+	install_args.add_argument ('-D', '--dry-run'
 		, action='store_true'
 		, help='Simulate download / install.'
-		, default=False)
-	install_args.add_argument('language_code'
+		, default=False
+	)
+	install_args.add_argument ('language_code'
 		, type=str
-		, help='Select language.')
-	install_args.add_argument('voice_index'
+		, help='Select language.'
+	)
+	install_args.add_argument ('voice_index'
 		, type=int
-		, help='Specific language voice. (defaults to first one)')
+		, help='Specific language voice. (defaults to first one)'
+	)
 
 	return parser
 
@@ -180,7 +218,14 @@ def main ():
 		return 0
 
 	# Fetch default paths for config and data storage.
-	paths = db.data_paths ()
+	paths = None
+	if args.data_root:
+		if not os.path.exists (args.data_root):
+			holz.error (f'Data path not found! ({args.data_root})')
+			return 1
+		paths = db.data_paths (args.data_root)
+	else:
+		paths = db.data_paths ()
 	# Fetch details on where to obtain voice data from.
 	repo_info = db.remote_repo_config ()
 	
@@ -188,6 +233,8 @@ def main ():
 	if args.refresh:
 		holz.info ('Fetching and rebuilding database ...')
 		context = db.index_download_and_rebuild (paths, repo_info)
+		with open (context['paths']['last-updated'], 'r') as f:
+			sys.stdout.write (f.read ())
 		return 0
 
 	# Trying to create new context object. Might fail if database is missing / corrupt.
@@ -197,12 +244,12 @@ def main ():
 			f'Could not create context. ' \
 			f'Please refresh database using "{sys.argv[0]} -vR"'
 		)
-		parser.print_help()
+		parser.print_help ()
 		return 1
 
 	# Show help message if no command is provided.
 	if None is args.command:
-		parser.print_help()
+		parser.print_help ()
 		return 1
 
 	# Build command lookup map.
