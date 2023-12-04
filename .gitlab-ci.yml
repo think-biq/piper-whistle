@@ -3,6 +3,7 @@ image: thinkbiq/ue-plugin-staging:latest
 
 functional-test:
   script:
+    - apt install -y python3-pip
     - pip install -U pip
     - pip install -r requirements.dev.txt
     - pip install -r requirements.txt
