@@ -4,7 +4,7 @@
 
 
 def version ():
-	return "1.6.23"
+	return "1.6.28"
 
 
 if '__main__' == __name__:
