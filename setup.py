@@ -1,5 +1,6 @@
+#!env python3
 """    
-	setuptools script to install / build LLV.
+	setuptools script to install / build piper-whistle.
 
 	2021-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
 	See license.md for details.
