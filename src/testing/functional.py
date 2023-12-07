@@ -67,6 +67,11 @@ de_DE-eva_k-x_low	0
 Speakers:
 		0 (no-name)
 """
+expected_list_voice_plus_legal = """
+de_DE-eva_k-x_low	0	Voice[Original]: See URL, Reference: , Dataset: https://www.caito.de/2019/01/03/the-m-ailabs-speech-dataset/
+Speakers:
+		0 (no-name)
+"""
 
 
 expected_install_voice = [
@@ -112,6 +117,7 @@ class CliCommandTests (unittest.TestCase):
 			'create-index': make_cli_arg_list ('-vR'),
 			'list-languages': make_cli_arg_list ('list', '-L'),
 			'list-voice': make_cli_arg_list ('list', '-l', 'de_DE', '-i', '0'),
+			'list-voice-legal': make_cli_arg_list ('list', '-l', 'de_DE', '-i', '0', '-g'),
 			'install-voice': make_cli_arg_list ('install', 'de_DE', '0'),
 			'list-installed-voices': make_cli_arg_list ('list', '-I'),
 			'show-path': make_cli_arg_list ('path', 'de_DE-eva_k-x_low')
@@ -156,6 +162,17 @@ class CliCommandTests (unittest.TestCase):
 
 		out_str = cli_output.getvalue ().strip ()
 		self.assertEqual (out_str, expected_list_voice.strip ())
+
+	def test_list_voice_legal (self):
+		# Ask whistle to list the first voice for the german language and the
+		# available legal information.
+		cli_output = io.StringIO ()
+		with redirect_stdout (cli_output):
+			with patch.object (sys, 'argv', self.test_arguments['list-voice-legal']):
+				whistle_cli.main ()
+
+		out_str = cli_output.getvalue ().strip ()
+		self.assertEqual (out_str, expected_list_voice_plus_legal.strip ())
 
 	def test_install_voice (self):
 		# Ask whistle to install the first german voice at index 0.
