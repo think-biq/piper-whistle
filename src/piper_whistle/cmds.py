@@ -63,99 +63,6 @@ def _parse_voice_selector (selector):
 	return name, quality, speaker
 
 
-def _assemble_download_info (context, code, voice_i):
-	"""! Compile details used to download voice data.
-
-	The assembled information may look like this:
-	{
-		'langugage': en_GB,
-		'model': {
-			'url': "https://...",
-			'size': 777,
-			'md5': some md5 hash
-		},
-		'config': {
-			'url': "https://...",
-			'size': 777,
-			'md5': some md5 hash
-		},
-		'samples': [
-			list of URLs to a sample voice reading for each speaker
-		],
-		'local_path_relative': /some/local/path,
-		'selection_name': selector name,
-	}	
-
-	@param context Context information and whistle database.
-	@param code Language code of voice to be downloaded.
-	@param voice_i Voice index to be downloaded.
-	@return Returns a map containing download information.
-	"""
-	index = context['db']['index']
-	langdb = context['db']['languages']
-	# For example: "https://huggingface.co/rhasspy/piper-voices/resolve/main"
-	base_url = db.remote_repo_build_branch_root (context['repo'])
-
-	# Check if given code is available and collect meta info for later
-	# download and storage.
-	if code in langdb:
-		lang = langdb[code]
-		voices = lang["voices"]
-		# Select specific voice by index.
-		if -1 < voice_i and voice_i < len (voices):
-			voice_name = voices[voice_i]
-			holz.info (f'Requesting "{voice_name}" ...')
-			voice_details = index[voice_name]
-			
-			download_info = {
-				'langugage': code,
-				'model': None,
-				'config': None,
-				'samples': [],
-				'local_path_relative': f'{code}/{voice_name}',
-				'selection_name': f"{code}:{voice_details['name']}@{voice_details['quality']}"
-			}
-
-			# Identify onnx speech model files.
-			for file in voice_details['files']:
-				if file.endswith ('.onnx'):
-					download_info['model'] = {
-						'url': f'{base_url}/{file}',
-						'size': voice_details['files'][file]['size_bytes'],
-						'md5': voice_details['files'][file]['md5_digest']
-					}
-				elif file.endswith ('.onnx.json'):
-					download_info['config'] = {
-						'url': f'{base_url}/{file}',
-						'size': voice_details['files'][file]['size_bytes'],
-						'md5': voice_details['files'][file]['md5_digest']
-					}
-
-			voice_base_url = os.path.dirname (download_info['model']['url'])
-
-			def build_sample_url (base, speaker_name, speaker_id, ext = 'mp3'):
-				return f'{base}/samples/{speaker_name}_{speaker_id}.{ext}'
-
-			# samples are based on speakers.
-			# there is always a speaker 0 by default.
-			if 1 >= int (voice_details['num_speakers']):
-				speaker_url = build_sample_url (voice_base_url, 'speaker', 0)
-				download_info['samples'].append (speaker_url)
-			else:
-				for speaker_name in voice_details['speaker_id_map']:
-					speaker_id = int(voice_details['speaker_id_map'][speaker_name])
-					speaker_url = build_sample_url (voice_base_url, 'speaker', speaker_id)
-					download_info['samples'].append (speaker_url)
-
-			return download_info
-		else:
-			holz.error (f'Invalid voice index!')
-	else:
-		holz.error (f'Cannot recognize: "{code}"')
-
-	return None
-
-
 def run_guess (context, args):
 	"""! Run command 'guess'
 	@param context Context information and whistle database.
@@ -254,6 +161,10 @@ def run_list (context, args):
 			sys.stdout.write (f"\t{model['code']}:{model['name']}@{model['quality']}")
 			if args.verbose:
 				sys.stdout.write (f"\t{model['path']}")
+			if args.legal:
+				lgl = context['db']['legal'][model['name']]
+				a = f"Voice[{lgl['training']}]: {lgl['license']}, Reference: {lgl['reference']}, Dataset: {lgl['dataset-url']}"
+				sys.stdout.write (f"\t{a}")
 			sys.stdout.write ("\n")
 
 		return 0
@@ -265,7 +176,12 @@ def run_list (context, args):
 			sys.stdout.write (f'Voices for "{code}":\n')
 			voice_i = 0
 			for voice_name in lang['voices']:
-				sys.stdout.write (f"\t{voice_i}: {voice_name}\n")
+				details = voice_name
+				if args.legal:
+					lgl = context['db']['legal'][voice_name]
+					a = f"Voice[{lgl['training']}]: {lgl['license']}, Reference: {lgl['reference']}, Dataset: {lgl['dataset-url']}"
+					details = f"{details} ({a})"
+				sys.stdout.write (f"\t{voice_i}: {details}\n")
 
 				voice_i = voice_i + 1
 
@@ -283,7 +199,12 @@ def run_list (context, args):
 	if -1 < voice_i:
 		voice_name = lang['voices'][voice_i]
 
-		sys.stdout.write (f'{voice_name}\t{voice_i}\n')
+		sys.stdout.write (f'{voice_name}\t{voice_i}')
+		if args.legal:
+			lgl = context['db']['legal'][voice_name]
+			a = f"Voice[{lgl['training']}]: {lgl['license']}, Reference: {lgl['reference']}, Dataset: {lgl['dataset-url']}"
+			sys.stdout.write (f'\t{a}')
+		sys.stdout.write ('\n')
 		speakers = index[voice_name]['speaker_id_map']
 		sys.stdout.write (f'Speakers:\n')
 		if 0 == len (speakers):
@@ -295,7 +216,12 @@ def run_list (context, args):
 		sys.stdout.write (f'Available voices ({code}):\n')
 		voice_i = 0
 		for voice_name in lang['voices']:
-			sys.stdout.write (f"\t{voice_i}: {voice_name}\n")
+			sys.stdout.write (f"\t{voice_i}: {voice_name}")
+			if args.legal:
+				lgl = context['db']['legal'][voice_name]
+				a = f"Voice[{lgl['training']}]: {lgl['license']}, Reference: {lgl['reference']}, Dataset: {lgl['dataset-url']}"
+				sys.stdout.write (f'\t{a}')
+			sys.stdout.write ('\n')
 
 			voice_i = voice_i + 1
 
@@ -317,7 +243,7 @@ def run_preview (context, args):
 	
 	holz.info (f'Looking up preview info for {code}:{voice_i}:{speaker_i} ...')
 	speaker_url = None
-	download_info = _assemble_download_info (context, code, voice_i)
+	download_info = db.assemble_download_info (context, code, voice_i)
 	if download_info:
 		if -1 < speaker_i and speaker_i < len (download_info['samples']):
 			speaker_url = download_info['samples'][speaker_i]
@@ -378,7 +304,7 @@ def run_install (context, args):
 	index = context['db']['index']
 	langdb = context['db']['languages']
 
-	download_info = _assemble_download_info (context, code, voice_i)
+	download_info = db.assemble_download_info (context, code, voice_i)
 	if not download_info:
 		holz.error ('Could not find any downloads for this configuration.')
 		return 13

@@ -111,6 +111,122 @@ def remote_repo_build_index_url (repo_info):
 	return index_url
 
 
+def assemble_download_info (context, code, voice_i):
+	"""! Compile details used to download voice data.
+
+	The assembled information may look like this:
+	{
+		'langugage': en_GB,
+		'model': {
+			'url': "https://...",
+			'size': 777,
+			'md5': some md5 hash
+		},
+		'config': {
+			'url': "https://...",
+			'size': 777,
+			'md5': some md5 hash
+		},
+		'samples': [
+			list of URLs to a sample voice reading for each speaker
+		],
+		'local_path_relative': /some/local/path,
+		'selection_name': selector name,
+	}	
+
+	@param context Context information and whistle database.
+	@param code Language code of voice to be downloaded.
+	@param voice_i Voice index to be downloaded.
+	@return Returns a map containing download information.
+	"""
+	index = context['db']['index']
+	langdb = context['db']['languages']
+	# For example: "https://huggingface.co/rhasspy/piper-voices/resolve/main"
+	base_url = remote_repo_build_branch_root (context['repo'])
+
+	# Check if given code is available and collect meta info for later
+	# download and storage.
+	if code in langdb:
+		lang = langdb[code]
+		voices = lang["voices"]
+		# Select specific voice by index.
+		if -1 < voice_i and voice_i < len (voices):
+			voice_name = voices[voice_i]
+			holz.info (f'Requesting "{voice_name}" ...')
+			voice_details = index[voice_name]
+			
+			download_info = {
+				'langugage': code,
+				'model': None,
+				'config': None,
+				'card': None,
+				'samples': [],
+				'local_path_relative': f'{code}/{voice_name}',
+				'selection_name': f"{code}:{voice_details['name']}@{voice_details['quality']}"
+			}
+
+			# Identify onnx speech model files.
+			for file in voice_details['files']:
+				if file.endswith ('.onnx'):
+					download_info['model'] = {
+						'url': f'{base_url}/{file}',
+						'size': voice_details['files'][file]['size_bytes'],
+						'md5': voice_details['files'][file]['md5_digest']
+					}
+				elif file.endswith ('.onnx.json'):
+					download_info['config'] = {
+						'url': f'{base_url}/{file}',
+						'size': voice_details['files'][file]['size_bytes'],
+						'md5': voice_details['files'][file]['md5_digest']
+					}
+				elif file.endswith ('MODEL_CARD'):
+					download_info['card'] = {
+						'url': f'{base_url}/{file}',
+						'size': voice_details['files'][file]['size_bytes'],
+						'md5': voice_details['files'][file]['md5_digest']
+					}
+
+			voice_base_url = os.path.dirname (download_info['model']['url'])
+
+			def build_sample_url (base, speaker_name, speaker_id, ext = 'mp3'):
+				return f'{base}/samples/{speaker_name}_{speaker_id}.{ext}'
+
+			# samples are based on speakers.
+			# there is always a speaker 0 by default.
+			if 1 >= int (voice_details['num_speakers']):
+				speaker_url = build_sample_url (voice_base_url, 'speaker', 0)
+				download_info['samples'].append (speaker_url)
+			else:
+				for speaker_name in voice_details['speaker_id_map']:
+					speaker_id = int(voice_details['speaker_id_map'][speaker_name])
+					speaker_url = build_sample_url (voice_base_url, 'speaker', speaker_id)
+					download_info['samples'].append (speaker_url)
+
+			return download_info
+		else:
+			holz.error (f'Invalid voice index!')
+	else:
+		holz.error (f'Cannot recognize: "{code}"')
+
+	return None
+
+
+def _fetch_url_raw (url):
+	"""
+	"""
+	temp = tempfile.NamedTemporaryFile ()
+	temp_path = temp.name
+	temp.close ()
+
+	r = util.download_as_stream_with_progress (url, temp_path)
+	if 0 < r:
+		holz.debug (f'Finished downloading. "{url}" => "{temp_path}"')
+		with open (temp_path, 'r') as f:
+			return f.read ()
+
+	return None
+
+
 def index_fetch_raw_filelist (repo_info):
 	"""! Query the huggingface repository for a list of model files.
 	@param repo_info Remote repo information map. Can be obtained via @ref "remote_repo_config ()".
@@ -140,32 +256,56 @@ def index_fetch_raw (repo_info):
 	"""
 	url = remote_repo_build_index_url (repo_info)
 
-	"""
-	holz.info (f'Checking remote file "{url}" ...')
-	r = requests.head (url)
-	if not (300 > r.status_code):
-		holz.info (f'Could not find index file at "{url}".')
-		return None
-
-	s = util.float_round (int (r.headers['Content-Length']) / 1024)
-	holz.info (f'Appears to be present with a size of "{s}kb".')
-
-	holz.info (f'Fetching index file ...')
-	r = requests.get (url)
-	if 300 > r.status_code:
-		return json.loads (r.content.decode ('utf8'))
-	"""
 	temp = tempfile.NamedTemporaryFile ()
 	temp_path = temp.name
 	temp.close ()
 
-	r = util.download_as_stream_with_progress (url, temp_path)
-	if 0 < r:
-		holz.debug (f'Finished downloading. "{url}" => "{temp_path}"')
-		with open (temp_path, 'r') as f:
-			return json.loads (f.read ())
+	raw_text = _fetch_url_raw (url)
+	if raw_text:
+		return json.loads (raw_text)
 
+	holz.error (f'Could note fetch index.')
 	return None
+
+
+def _parse_model_card (card_text):
+	lines = [line.strip () for line in card_text.split ('\n')]
+	entry = {
+		'dataset-url': None,
+		'license': None,
+		'training': None,
+		'reference': None
+	}
+
+	read_training_status = False
+	ln = 0
+	for line in lines:
+		if 0 == len (line):
+			continue
+
+		if read_training_status:
+			l = line.lower ()
+			if l.startswith ('finetuned'):
+				entry['training'] = 'Tuned'
+				entry['reference'] = line.replace ('Finetuned from', '').strip ()
+			elif l.startswith ('fine-tuned'):
+				entry['training'] = 'Tuned'
+				entry['reference'] = line.replace ('Fine-tuned from', '').strip ()
+			else:
+				entry['training'] = 'Original'
+				entry['reference'] = line.replace ('Trained from scratch', '')
+				if entry['reference'].endswith ('.'):
+					entry['reference'] = entry['reference'][:-1]
+			read_training_status = False
+		elif line.startswith ('* License:'):
+			entry['license'] = line.replace ('* License:', '').strip ()
+		elif line.startswith ('* URL:'):
+			entry['dataset-url'] = line.replace ('* URL:', '').strip ()
+		elif line.startswith ('## Training'):
+			read_training_status = True
+		ln += 1
+
+	return entry
 
 
 def index_download_and_rebuild (paths = data_paths (), repo_info = remote_repo_config ()):
@@ -219,8 +359,50 @@ def index_download_and_rebuild (paths = data_paths (), repo_info = remote_repo_c
 
 	holz.info (f"Database files stored at '{paths['data']}'.")
 
+	# build legal info based on model cards
+	legal = {}
+	if True:
+		base_url = remote_repo_build_branch_root (repo_info)
+
+		for code in langdb:
+			holz.info (f'Processing "{code}":')				
+			voice_i = 0
+			for voice_name in langdb[code]['voices']:
+				holz.info (f"\tFetching model card for {voice_i}: {voice_name}")
+				dl_info = None
+				voice_details = index[voice_name]
+				# Identify onnx speech model files.
+				for file in voice_details['files']:
+					if file.endswith ('MODEL_CARD'):
+						dl_info = {
+							'url': f'{base_url}/{file}',
+							'size': voice_details['files'][file]['size_bytes'],
+							'md5': voice_details['files'][file]['md5_digest']
+						}
+
+				model_card_text = _fetch_url_raw (dl_info['url'])
+				card = _parse_model_card (model_card_text)
+
+				holz.info (f'\tStoring license ...')
+				legal[voice_name] = card
+
+				voice_i = voice_i + 1
+
+		with open (os.path.join (paths['data'], 'legal.json'), 'w') as f:
+			json.dump (legal, f, indent = 4)
+
 	holz.info ('Regenerating context ...')
-	return context_create (paths, repo_info)
+	context = context_create (paths, repo_info)
+
+	"""TODO: consider automatic lookup / best guess of corpus data
+	# corpus licenses lookup
+	# https://raw.githubusercontent.com/coqui-ai/open-speech-corpora/master/README.md
+	corpus_lookup_raw = _fetch_url_raw ('https://raw.githubusercontent.com/coqui-ai/open-speech-corpora/master/README.md')
+	if corpus_lookup_raw:
+		with open (os.path.join (paths['data'], 'corpus-lookup.md'), 'w') as f:
+			f.write (corpus_lookup_raw)
+	"""
+	return context
 
 
 def _context_is_valid (context):
@@ -266,16 +448,23 @@ def context_create (paths = data_paths (), repo_info = remote_repo_config ()):
 	}
 
 	if not os.path.exists (paths['index']):
-		holz.warn ('No database index found!')
+		holz.error ('No database index found!')
 	else:
 		with open (paths['index'], 'r') as f:
 			db['index'] = json.load (f)
 
 	if not os.path.exists (paths['languages']):
-		holz.warn ('No language lookup found!')
+		holz.error ('No language lookup found!')
 	else:
 		with open (paths['languages'], 'r') as f:
 			db['languages'] = json.load (f)
+
+	lgl_path = os.path.join (paths['data'], 'legal.json')
+	if not os.path.exists (lgl_path):
+		holz.error ('No legal lookup found!')
+	else:
+		with open (lgl_path, 'r') as f:
+			db['legal'] = json.load (f)
 
 	context = {
 		'paths': paths,

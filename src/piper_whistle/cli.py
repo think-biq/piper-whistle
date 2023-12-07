@@ -128,6 +128,11 @@ def create_arg_parser ():
 		, help='List available languages.'
 		, default=False
 	)
+	list_args.add_argument ('-g', '--legal'
+		, action='store_true'
+		, help='Show avaiable legal information.'
+		, default=False
+	)
 	list_args.add_argument ('-p', '--install-path'
 		, action='store_true'
 		, help='List path of voice (if installed).'
