@@ -23,3 +23,13 @@ venv-deactivate:
 
 build-wheel:
 	python3 "$(PROJECT_DIR)/setup.py" bdist_wheel
+
+release:
+	mkdir -p "$(PROJECT_DIR)/build/release"
+	python3 -m build -s -w -o "$(PROJECT_DIR)/build/release"
+
+pypi-test:
+	twine upload -r testpypi "$(PROJECT_DIR)/build/release"/*
+
+pypi:
+	twine upload "$(PROJECT_DIR)/build/release"/*

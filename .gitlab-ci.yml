@@ -15,6 +15,22 @@ functional-test:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       allow_failure: true
 
+release-pypi-test:
+  script:
+    - apt update --fix-missing
+    - apt install -y python3-pip
+    - pip install -U pip
+    - pip install -r requirements.dev.txt
+    - pip install -r requirements.txt
+    - mkdir -p build/release
+    - python3 -m build -s -w -o build/release
+    - twine upload --config-file ${PYPI_CONFIG_FILE} -r testpypi build/release/*
+  rules:
+    # This ensures that only pushes to the default branch will trigger
+    # a pages deploy
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      allow_failure: true
+
 pages:
   script:
     - echo "Building documentation ..."

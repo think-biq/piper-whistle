@@ -22,6 +22,7 @@ setuptools.setup (
 	description = "CLI tool to manage piper voices.",
 	long_description = long_description,
 	long_description_content_type = "text/markdown",
+	keywords="text-to-speech piper voice model tool",
 	url = "https://gitlab.com/think-biq/piper-whistle",
 	package_dir = { 'piper_whistle': 'src/piper_whistle' },
 	packages = ['piper_whistle'],

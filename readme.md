@@ -49,7 +49,7 @@ Shows the local path to a specific model. The voice_selector has the format:
 ```
 ${CODE}:${NAME}@${QUALITY}/${SPEAKER}
 ```
-The ${SPEAKER} part is optional; as is the ${CODE} part. So if you want to select the voice named 'alba' in quality 'medium', you could simply query: ```alba@medium```
+The ```${SPEAKER}``` part is optional; as is the ```${CODE}``` part. So if you want to select the voice named 'alba' in quality 'medium', you could simply query: ```alba@medium```
 
 The language code is infered.
 Alternatively, you can just query with the model name listed by the `list` command.  
