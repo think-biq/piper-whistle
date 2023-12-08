@@ -11,6 +11,7 @@ from . import holz
 from . import db
 from . import cmds
 from . import util
+from .__init__ import version
 
 
 def create_arg_parser ():
@@ -219,7 +220,7 @@ def main ():
 	holz.normalize ()
 
 	if args.version:
-		print (get_version ())
+		print (version ())
 		return 0
 
 	# Fetch default paths for config and data storage.
