@@ -32,6 +32,23 @@ release-pypi-test:
       when: manual
       allow_failure: true
 
+release-pypi:
+  script:
+    - apt update --fix-missing
+    - apt install -y python3-pip python3.8-venv
+    - pip install -U pip
+    - pip install -r requirements.dev.txt
+    - pip install -r requirements.txt
+    - mkdir -p build/release
+    - python3 -m build -s -w -o build/release
+    - twine upload --config-file ${PYPI_CONFIG_FILE} build/release/*
+  rules:
+    # This ensures that only pushes to the default branch will trigger
+    # a pages deploy
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+
 pages:
   script:
     - echo "Building documentation ..."
