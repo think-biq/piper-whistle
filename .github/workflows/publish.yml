@@ -1,0 +1,20 @@
+name: Build and publish python package for piper-whistle
+on:
+  release:
+    types: [published]
+jobs:
+  build_wheel:
+    name: "Building wheel file"
+    runs-on: thinkbiq/ue-plugin-staging:latest
+    steps:
+      - name: build
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: apt update --fix-missing
+      - run: apt install -y python3-pip
+      - run: pip install -U pip
+      - run: pip install -r requirements.dev.txt
+      - run: pip install -r requirements.txt
+      - run: python3 setup.py bdist_wheel
+      - run: ls -lav dist

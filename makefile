@@ -20,3 +20,6 @@ venv-clean:
 
 venv-deactivate:
 	$(shell declare -f deactivate && deactivate)
+
+build-wheel:
+	python3 "$(PROJECT_DIR)/setup.py" bdist_wheel
