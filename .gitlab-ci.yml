@@ -41,7 +41,7 @@ release-pypi:
     - pip install -r requirements.txt
     - mkdir -p build/release
     - python3 -m build -s -w -o build/release
-    - twine upload --config-file ${PYPI_CONFIG_FILE} build/release/*
+    - twine upload --config-file ${PYPI_LIVE_CONFIG_FILE} build/release/*
   rules:
     # This ensures that only pushes to the default branch will trigger
     # a pages deploy
