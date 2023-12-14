@@ -320,15 +320,6 @@ def run_install (context, args):
 			size = util.float_round (float (download_info['config']['size']) / 1024)
 			holz.info (f'Fetching config ({size}kb) ...')
 			if not dry_run:
-				"""
-				r = requests.get (config_url)
-				if 300 > r.status_code:
-					with open (config_file_path, 'wb') as f:
-						f.write (r.content)
-				else:
-					holz.error ('Error downloading config.')
-					return 13
-				"""
 				r = util.download_as_stream_with_progress (config_url, config_file_path.as_posix ())
 				if 0 > r:
 					holz.error ('Error downloading config.')
@@ -345,15 +336,6 @@ def run_install (context, args):
 			size = util.float_round (float (download_info['model']['size']) / 1024 / 1024)
 			holz.info (f'Fetching {model_name} ({size}mb) ...')
 			if not dry_run:
-				"""
-				r = requests.get (model_url)
-				if 300 > r.status_code:
-					with open (model_file_path, 'wb') as f:
-						f.write (r.content)
-				else:
-					holz.error ('Error downloading model.')
-					return 13
-				"""
 				r = util.download_as_stream_with_progress (model_url, model_file_path.as_posix ())
 				if 0 > r:
 					holz.error ('Error downloading model.')
@@ -363,5 +345,32 @@ def run_install (context, args):
 
 		selector = download_info["selection_name"]
 		sys.stdout.write (f'{selector}\t{model_name}\t{model_file_path}')
+
+	return 0
+
+
+def run_remove (context, args):
+	"""! Run command 'install'
+	@param context Context information and whistle database.
+	@param args Processed arguments (prepared by argparse).
+	@return Returns 0 on success, otherwise > 0.
+	"""
+	selector = args.voice_selector
+
+	code = None
+	if ':' in selector:
+		code, selector = selector.split (':')
+
+	name, quality, speaker = _parse_voice_selector (selector)
+
+	model_info = {
+		'name': name,
+		'quality': quality,
+		'speaker': speaker
+	}
+	did_remove = db.model_remove (context['paths'], model_info)
+	if not did_remove:
+		holz.error (f'Could not remove "{name}@{quality}"!')
+		return 13
 
 	return 0

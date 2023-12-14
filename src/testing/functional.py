@@ -90,6 +90,10 @@ expected_show_path = """
 	piper-whistle/voices/de_DE/de_DE-eva_k-x_low/de_DE-eva_k-x_low.onnx
 """
 
+expected_remove_voice = """
+Removed "eva_k@x_low".
+"""
+
 
 def check_if_timestamp (result):
 	m = re.match(r'^\d+\.\d+$', result)
@@ -120,7 +124,8 @@ class CliCommandTests (unittest.TestCase):
 			'list-voice-legal': make_cli_arg_list ('list', '-l', 'de_DE', '-i', '0', '-g'),
 			'install-voice': make_cli_arg_list ('install', 'de_DE', '0'),
 			'list-installed-voices': make_cli_arg_list ('list', '-I'),
-			'show-path': make_cli_arg_list ('path', 'de_DE-eva_k-x_low')
+			'show-path': make_cli_arg_list ('path', 'de_DE-eva_k-x_low'),
+			'remove-voice': make_cli_arg_list ('remove', 'de_DE-eva_k-x_low')
 		}
 
 		sys.stdout.write (f'[Setup] Temporary data root: "{data_root}"\n')
@@ -213,6 +218,16 @@ class CliCommandTests (unittest.TestCase):
 
 		out_str = cli_output.getvalue ().strip ()
 		self.assertTrue (out_str.endswith (expected_show_path.strip ()))
+
+	def test_remove_voice (self):
+		# Ask whistle to remove voice named 'de_DE-eva_k-x_low'.
+		cli_output = io.StringIO ()
+		with redirect_stdout (cli_output):
+			with patch.object (sys, 'argv', self.test_arguments['remove-voice']):
+				whistle_cli.main ()
+
+		out_str = cli_output.getvalue ().strip ()
+		self.assertEqual (out_str, expected_remove_voice.strip ())
 
 
 if __name__ == '__main__':

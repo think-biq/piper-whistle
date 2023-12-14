@@ -199,6 +199,18 @@ def create_arg_parser ():
 		, help='Specific language voice. (defaults to first one)'
 	)
 
+	# Setup remove command and options.
+	remove_args = subparsers.add_parser ('remove')
+	remove_args.add_argument ('-v', '--verbose'
+		, action='store_true'
+		, help='Activate verbose logging.'
+		, default=False
+	)
+	remove_args.add_argument ('voice_selector', type=str
+		, help='Selector of voice to search.'
+		, default=''
+	)
+
 	return parser
 
 
@@ -265,7 +277,8 @@ def main ():
 		'speak': cmds.run_speak,
 		'list': cmds.run_list,
 		'preview': cmds.run_preview,
-		'install': cmds.run_install
+		'install': cmds.run_install,
+		'remove': cmds.run_remove
 	}
 
 	# Select command and run it.

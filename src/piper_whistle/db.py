@@ -598,3 +598,28 @@ def model_resolve_path (paths, model_info):
 					break
 
 	return voice_file_path
+
+
+def model_remove (paths, model_info):
+	"""! Removes given model from piper-whistle cache.
+
+	@return Returns the true if remove, false otherwise.
+	"""
+	model_path = model_resolve_path (paths, model_info)
+	if not model_path:
+		holz.warn (f'Could not find model with name "{model_info["name"]}@{model_info["quality"]}".')
+		return False
+
+	with pathlib.Path (model_path) as p:
+		pr = p.resolve ().parent
+		
+		for model_part in pr.iterdir ():
+			holz.debug (f'Removing "{model_part}" ...')
+			model_part.unlink ()
+
+		holz.debug (f'Removing "{pr}" ...')
+		pr.rmdir ()
+
+	sys.stdout.write (f'Removed "{model_info["name"]}@{model_info["quality"]}".\n')
+
+	return True
