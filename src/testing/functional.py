@@ -101,6 +101,9 @@ def check_if_timestamp (result):
 
 
 class CliCommandTests (unittest.TestCase):
+	""" Using goofy naming scheme for test case ordering.
+	Suggested here https://stackoverflow.com/a/7085051
+	"""
 
 	@classmethod
 	def setUpClass (cls):
@@ -135,7 +138,7 @@ class CliCommandTests (unittest.TestCase):
 		sys.stdout.write (f'\n[Teardown] Data directory after running tests:\n')
 		display_tree (cls.data_root_path.as_posix ())
 
-	def test_create_index (self):
+	def test_a0_create_index (self):
 		# Ask whistle to downlnoad and rebuild voice database.
 		cli_output = io.StringIO ()
 		with redirect_stdout (cli_output):
@@ -148,7 +151,7 @@ class CliCommandTests (unittest.TestCase):
 		whistle_paths = whistle_db.data_paths (self.data_root_path.as_posix ())
 		self.assertTrue (os.path.exists (whistle_paths['data']))
 
-	def test_list_languages (self):
+	def test_b0_list_languages (self):
 		# Ask whistle to list all available languages.
 		cli_output = io.StringIO ()
 		with redirect_stdout (cli_output):
@@ -158,7 +161,7 @@ class CliCommandTests (unittest.TestCase):
 		out_str = cli_output.getvalue ().strip ()
 		self.assertEqual (out_str, expected_list_languages.strip ())
 
-	def test_list_voice (self):
+	def test_c0_list_voice (self):
 		# Ask whistle to list the first voice for the german language.
 		cli_output = io.StringIO ()
 		with redirect_stdout (cli_output):
@@ -168,7 +171,7 @@ class CliCommandTests (unittest.TestCase):
 		out_str = cli_output.getvalue ().strip ()
 		self.assertEqual (out_str, expected_list_voice.strip ())
 
-	def test_list_voice_legal (self):
+	def test_d0_list_voice_legal (self):
 		# Ask whistle to list the first voice for the german language and the
 		# available legal information.
 		cli_output = io.StringIO ()
@@ -179,7 +182,7 @@ class CliCommandTests (unittest.TestCase):
 		out_str = cli_output.getvalue ().strip ()
 		self.assertEqual (out_str, expected_list_voice_plus_legal.strip ())
 
-	def test_install_voice (self):
+	def test_e0_install_voice (self):
 		# Ask whistle to install the first german voice at index 0.
 		cli_output = io.StringIO ()
 		with redirect_stdout (cli_output):
@@ -199,7 +202,7 @@ class CliCommandTests (unittest.TestCase):
 		)
 		self.assertTrue (os.path.exists (onnx_path))
 
-	def test_list_installed_voices (self):
+	def test_f0_list_installed_voices (self):
 		# Ask whistle to list all installed voices.
 		cli_output = io.StringIO ()
 		with redirect_stdout (cli_output):
@@ -209,7 +212,7 @@ class CliCommandTests (unittest.TestCase):
 		out_str = cli_output.getvalue ().strip ()
 		self.assertEqual (out_str, expected_list_installed_voices.strip ())
 
-	def test_show_voice_path (self):
+	def test_g0_show_voice_path (self):
 		# Ask whistle to show the path to the voice with name 'de_DE-eva_k-x_low'.
 		cli_output = io.StringIO ()
 		with redirect_stdout (cli_output):
@@ -219,7 +222,7 @@ class CliCommandTests (unittest.TestCase):
 		out_str = cli_output.getvalue ().strip ()
 		self.assertTrue (out_str.endswith (expected_show_path.strip ()))
 
-	def test_remove_voice (self):
+	def test_h0_remove_voice (self):
 		# Ask whistle to remove voice named 'de_DE-eva_k-x_low'.
 		cli_output = io.StringIO ()
 		with redirect_stdout (cli_output):
