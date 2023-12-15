@@ -356,7 +356,7 @@ def run_install (context, args):
 
 
 def run_remove (context, args):
-	"""! Run command 'install'
+	"""! Run command 'remove'
 	@param context Context information and whistle database.
 	@param args Processed arguments (prepared by argparse).
 	@return Returns 0 on success, otherwise > 0.

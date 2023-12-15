@@ -5,15 +5,19 @@ Tool to manage voices used with the [piper][1] speech synthesizer. You may also 
 ## usage
 
 ```bash
-whistle [-h] [-v] [-V] [-R] {guess,path,speak,list,preview,install}
+piper_whistle [-h] [-d] [-v] [-V] [-P DATA_ROOT] [-R]
+               {guess,path,speak,list,preview,install,remove} ...
 
 positional arguments:
-  {guess,path,speak,list,preview,install}
+  {guess,path,speak,list,preview,install,remove}
 
 optional arguments:
   -h, --help            show this help message and exit
+  -d, --debug           Activate very verbose logging.
   -v, --verbose         Activate verbose logging.
   -V, --version         Show version number.
+  -P DATA_ROOT, --data-root DATA_ROOT
+                        Root path where whistle should store config and data in.
   -R, --refresh         Refreshes (or sets up) language index by downloading the latest lookup.
 ```
 
@@ -22,13 +26,14 @@ optional arguments:
 ### guess
 
 ```bash
-whistle guess [-h] language_name
+piper_whistle guess [-h] [-v] language_name
 
 positional arguments:
   language_name  A string representing a language name (or code).
 
 optional arguments:
   -h, --help     show this help message and exit
+  -v, --verbose  Activate verbose logging.
 ```
 
 Tries to guess the language you are looking for (and is supported by [piper][1]) from the name you provide.
@@ -36,13 +41,14 @@ Tries to guess the language you are looking for (and is supported by [piper][1])
 ### path
 
 ```bash
-whistle path [-h] voice_selector
+piper_whistle path [-h] [-v] voice_selector
 
 positional arguments:
   voice_selector  Selector of voice to search.
 
 optional arguments:
   -h, --help      show this help message and exit
+  -v, --verbose   Activate verbose logging.
 ```
 
 Shows the local path to a specific model. The voice_selector has the format:
@@ -61,13 +67,22 @@ So for the example above, that would be ```en_GB-alba-medium```
 ### speak
 
 ```bash
-whistle speak [-h] something
+piper_whistle speak [-h] [-c CHANNEL] [-j] [-r] [-o OUTPUT] [-v] something
 
 positional arguments:
-  something   Something to speak.
+  something             Something to speak.
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help            show this help message and exit
+  -c CHANNEL, --channel CHANNEL
+                        Path to channel (named pipe (aka. fifo)) to which piper is
+                        listening.
+  -j, --json            Encode the text as json payload. Is on by default.
+  -r, --raw             Encode the text directly.
+  -o OUTPUT, --output OUTPUT
+                        Instead of streaming to audio channel, specifies a path to
+                        wav file where speech will be store in.
+  -v, --verbose         Activate verbose logging.
 ```
 
 Currently only works on linux / bsd systems, with a FIFO (aka. named pipes) setup. The basic idea is, having one pipe accepting json input (provided by this command), which is listened to by [piper][1]. After [piper][1] has processed the audio, it is either saved to file or passed on to another FIFO, which can then be read by a streaming audio player like `aplay`.
@@ -84,7 +99,7 @@ pipes:
 processes:
 
 * tty0: tail -F /opt/wind/channels/speak | tee /opt/wind/channels/input
-* tty1: /opt/wind/piper/piper -m $(whistle path alba@medium) --debug --json-input --output_raw < /opt/wind/channels/input > /opt/wind/channels/output
+* tty1: /opt/wind/piper/piper -m $(piper_whistle path alba@medium) --debug --json-input --output_raw < /opt/wind/channels/input > /opt/wind/channels/output
 * tty2: aplay --buffer-size=777 -r 22050 -f S16_LE -t raw < channels/output
 
 The tail command makes sure, that the payload on speak is send to input,
@@ -94,13 +109,16 @@ after [piper][1] has finished the first payload. This way you can continually pr
 ### list
 
 ```bash
-whistle list [-h] [-I] [-a] [-L] [-p] [-l LANGUAGE_CODE] [-i VOICE_INDEX]
+piper_whistle list [-h] [-v] [-I] [-a] [-L] [-g] [-p] [-l LANGUAGE_CODE]
+                    [-i VOICE_INDEX]
 
 optional arguments:
   -h, --help            show this help message and exit
+  -v, --verbose         Activate verbose logging.
   -I, --installed       Only list installed voices.
   -a, --all             List voices for all available languages.
   -L, --languages       List available languages.
+  -g, --legal           Show avaiable legal information.
   -p, --install-path    List path of voice (if installed).
   -l LANGUAGE_CODE, --language-code LANGUAGE_CODE
                         Only list voices matching this language.
@@ -116,7 +134,7 @@ located in the user app path, as provided by [userpaths](https://pypi.org/projec
 ### preview
 
 ```bash
-whistle preview [-h] [-l LANGUAGE_CODE] [-i VOICE_INDEX] [-s SPEAKER_INDEX]
+piper_whistle preview [-h] [-l LANGUAGE_CODE] [-i VOICE_INDEX] [-s SPEAKER_INDEX]
                        [-D]
 
 optional arguments:
@@ -136,7 +154,7 @@ supported by [piper][1]. It currently uses [mplayer](http://www.mplayerhq.hu/) t
 ### install
 
 ```bash
-whistle install [-h] [-D] language_code voice_index
+piper_whistle install [-h] [-v] [-D] language_code voice_index
 
 positional arguments:
   language_code  Select language.
@@ -144,6 +162,7 @@ positional arguments:
 
 optional arguments:
   -h, --help     show this help message and exit
+  -v, --verbose  Activate verbose logging.
   -D, --dry-run  Simulate download / install.
 ```
 
@@ -153,6 +172,20 @@ and then note the language code and index, so install knows where to look.
 The model file (onnx) as well as its accompanying config (json) file, will be
 stored in the local user data path as provide by [userpaths](https://pypi.org/project/userpaths/). On linux this would be `${HOME}/.config/piper-whistle`.
 
+### remove
+
+```bash
+piper_whistle remove [-h] [-v] voice_selector
+
+positional arguments:
+  voice_selector  Selector of voice to search.
+
+optional arguments:
+  -h, --help      show this help message and exit
+  -v, --verbose   Activate verbose logging.
+```
+
+Any installed voice model can be deleted, via `remove`. You may pass the model name or shorthand selector.
 
 [1]: https://github.com/rhasspy/piper
 [2]: https://think-biq.gitlab.io/piper-whistle/
