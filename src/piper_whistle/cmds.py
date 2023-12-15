@@ -268,26 +268,32 @@ def run_preview (context, args):
 			if dry_run:
 				sys.stdout.write (f'dl {speaker_url} > {file_path.as_posix ()}\n')
 			else:
-				r = requests.get (speaker_url)
-				if 300 > r.status_code:
-					with open (file_path.as_posix (), 'wb') as f:
-						f.write (r.content)
-					holz.info ('Stored.')
-				else:
-					holz.error (f'Download broke with: {r}')
+				r = util.download_as_stream_with_progress (speaker_url, file_path.as_posix ())
+				if 0 > r:
+					holz.error ('Error downloading model.')
 					return 13
-		
-		play_cmd = ['mplayer', file_path.as_posix ()]
+
+		sys.stderr.write (f'Playing {file_path.as_posix ()} ...\n')
 		if dry_run:
-			sys.stdout.write (f'Would play file via: "{" ".join (play_cmd)}"')
+			sys.stdout.write (f'Dry-run, skipping play.')
 		else:
 			if not file_path.exists ():
 				holz.error ('File not found.')
 				return 13
 
-			sys.stderr.write (f'Playing {file_path.as_posix ()} ...\n')
-			r = _run_program (play_cmd)
-			holz.info (f'Finished with: {r[0]}')
+			# Suppress playsound's warning message about pygobject.
+			# Has to be done before loading modulde, since the loading code
+			# is producing the log message.
+			import logging
+			holz.setup ('playsound', logging.ERROR)
+
+			# After setup, load the module and play the sound.
+			from playsound import playsound
+			# TODO: On linux, this spins up another python instance, which is 
+			# not the most convenient way in terms of stopping / cancelling.
+			playsound (file_path.as_posix (), block = True)
+
+			holz.info (f'Finished with: 0')
 
 	return 0
 

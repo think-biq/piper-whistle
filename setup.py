@@ -37,8 +37,7 @@ setuptools.setup (
 			'piper_whistle = piper_whistle.cli:main'
 		],
 	},
-	install_requires=[
-		'tqdm==4.66.1',
+	install_requires = [
 		'attrs==23.1.0',
 		'certifi==2023.7.22',
 		'charset-normalizer==3.3.2',
@@ -47,6 +46,7 @@ setuptools.setup (
 		'huggingface-hub==0.18.0',
 		'idna==3.4',
 		'mdurl==0.1.2',
+		'playsound==1.3.0',
 		'PyYAML==6.0.1',
 		'rapidfuzz==3.5.1',
 		'requests==2.31.0',

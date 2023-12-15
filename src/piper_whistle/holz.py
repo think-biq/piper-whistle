@@ -61,14 +61,22 @@ def setup_default (log_name, log_level = default_level, log_formatter = default_
 	return default_logger
 
 
-def normalize ():
+def normalize (overrides = {}):
 	# collect all logges and normalize their setup / configuration
 	loggers = [logging.getLogger ()] \
 		+ [logging.getLogger (name) for name in logging.root.manager.loggerDict]
 
 	for l in loggers:
 		default_logger.debug (f'Normalizing setup for logger {l} ...')
-		configure (l, default_level, default_formatter)
+		if l.name in overrides:
+			default_logger.debug (f'Found override for "{l}". Applying ...')
+			lvl = overrides[l.name]['level']
+			fmttr = default_formatter
+			if 'formatter' in overrides[l.name] and not (overrides[l.name]['formatter'] is None):
+				fmttr = overrides[l]['formatter']
+			configure (l, lvl, fmttr)
+		else:
+			configure (l, default_level, default_formatter)
 
 
 def debug (message, category = None):
