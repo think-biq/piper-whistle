@@ -142,7 +142,6 @@ def _log (method, message, category, flush = default_flush):
 	m (message)
 	if flush or ALWAYS_FLUSH:
 		for h in logger.handlers:
-			print (f'Flushing {h.get_name ()} ...')
 			h.flush ()
 
 
@@ -175,7 +174,6 @@ class HolzNotifyLogger(logging.Logger):
 		global ON_LOGGER_REQUESTED
 		
 		if self.name in CURRENT_LOG_OVERRIDES:
-			print (f'Logger override. {self.name}')
 			_handle_logger_config_override(CURRENT_LOG_OVERRIDES
 				, self
 				, default_setup_silent
