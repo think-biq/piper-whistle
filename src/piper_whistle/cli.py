@@ -134,9 +134,19 @@ def create_arg_parser ():
 		, help='Show avaiable legal information.'
 		, default=False
 	)
+	list_args.add_argument ('-U', '--show-url'
+		, action='store_true'
+		, help='Show URL of voice on remote host.'
+		, default=False
+	)
+	list_args.add_argument ('-S', '--omit-speakers'
+		, action='store_true'
+		, help='Show URL of voice on remote host.'
+		, default=False
+	)
 	list_args.add_argument ('-p', '--install-path'
 		, action='store_true'
-		, help='List path of voice (if installed).'
+		, help='Show path of voice (if installed).'
 		, default=False
 	)
 	list_args.add_argument ('-l', '--language-code'
@@ -285,7 +295,9 @@ def main ():
 	# Select command and run it.
 	if args.command in commands:
 		holz.debug (f'Running command "{args.command}" ...')
-		return commands[args.command] (context, args)
+		r = commands[args.command] (context, args)
+		holz.debug (f'Finished with "{r}".')
+		return r
 
 	holz.error (f'Could not find command "{args.command}".')
 
@@ -296,6 +308,7 @@ def main ():
 
 if __name__ == '__main__':
 	"""! CLI entry point."""
-
+	# Call CLI entry function.
 	r = main ()
+	# Exit with return code.
 	sys.exit (r)

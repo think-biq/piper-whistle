@@ -160,9 +160,11 @@ def run_list (context, args):
 		return 0
 
 	if args.installed:
+		voice_i = 0
 		for model in db.model_list_installed (context['paths']):
+			code = model['code']
 			sys.stdout.write (
-				f"\t{model['code']}:{model['name']}@{model['quality']}"
+				f"\t{code}:{model['name']}@{model['quality']}"
 			)
 			if args.verbose:
 				sys.stdout.write (f"\t{model['path']}")
@@ -172,7 +174,14 @@ def run_list (context, args):
 					f"Reference: {lgl['reference']}, " \
 					f"Dataset: {lgl['dataset-url']}"
 				sys.stdout.write (f"\t{a}")
+			if args.show_url:
+				download_info = db.assemble_download_info (context
+					, code
+					, voice_i
+				)
+				sys.stdout.write (f"\t{download_info['model']['url']}")
 			sys.stdout.write ("\n")
+			voice_i += 1
 
 		return 0
 	
@@ -189,7 +198,13 @@ def run_list (context, args):
 					a = f"Voice[{lgl['training']}]: {lgl['license']}, " \
 						f"Reference: {lgl['reference']}, " \
 						f"Dataset: {lgl['dataset-url']}"
-					details = f"{details} ({a})"
+					details = f"{details}\t({a})"
+				if args.show_url:
+					download_info = db.assemble_download_info (context
+						, code
+						, voice_i
+					)
+					details = f"{a}\t{download_info['model']['url']}"
 				sys.stdout.write (f"\t{voice_i}: {details}\n")
 
 				voice_i = voice_i + 1
@@ -215,14 +230,24 @@ def run_list (context, args):
 				f"Reference: {lgl['reference']}, " \
 				f"Dataset: {lgl['dataset-url']}"
 			sys.stdout.write (f'\t{a}')
+		if args.show_url:
+			download_info = db.assemble_download_info (context
+				, code
+				, voice_i
+			)
+			sys.stdout.write (f"\t{download_info['model']['url']}")
+		
 		sys.stdout.write ('\n')
-		speakers = index[voice_name]['speaker_id_map']
-		sys.stdout.write (f'Speakers:\n')
-		if 0 == len (speakers):
-			sys.stdout.write (f'\t\t0 (no-name)\n')
-		else:
-			for speaker_id in speakers:
-				sys.stdout.write (f'\t\t{speakers[speaker_id]:3} ({speaker_id})\n')
+
+		if not args.omit_speakers:
+			speakers = index[voice_name]['speaker_id_map']
+
+			sys.stdout.write (f'Speakers:\n')
+			if 0 == len (speakers):
+				sys.stdout.write (f'\t\t0 (no-name)')
+			else:
+				for speaker_id in speakers:
+					sys.stdout.write (f'\t\t{speakers[speaker_id]:3} ({speaker_id})')
 	else:
 		sys.stdout.write (f'Available voices ({code}):\n')
 		voice_i = 0
@@ -234,9 +259,15 @@ def run_list (context, args):
 					f"Reference: {lgl['reference']}, " \
 					f"Dataset: {lgl['dataset-url']}"
 				sys.stdout.write (f'\t{a}')
+			if args.show_url:
+				download_info = db.assemble_download_info (context
+					, code
+					, voice_i
+				)
+				sys.stdout.write (f"\t{download_info['model']['url']}")
 			sys.stdout.write ('\n')
 
-			voice_i = voice_i + 1
+			voice_i += 1
 
 	return 0
 
