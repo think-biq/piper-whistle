@@ -26,7 +26,6 @@ test-release-pypi-test:
   stage: post-release-test
   script:
     - pip install -U pip
-    - pip install --index-url https://test.pypi.org/simple/ piper-whistle
     # Need to setup test as well as live repository, to properly resolve
     # all piper-whistle dependencies. Force the staged version, as to skip
     # the live version, since live repo seems to have precedence.
@@ -60,7 +59,15 @@ release-pypi-test:
     - pip install -r requirements.txt
     - mkdir -p build/release
     - python3 -m build -s -w -o build/release
-    - twine upload --config-file ${PYPI_CONFIG_FILE} -r testpypi build/release/*
+    - |
+      twine upload
+      --verbose
+      --comment "Automatic build of release-pypi-test target."
+      --non-interactive
+      --config-file ${PYPI_CONFIG_FILE}
+      --skip-existing
+      -r testpypi
+      build/release/*
   rules:
     # This ensures that only pushes to the staging / testing branch
     - if: $CI_COMMIT_REF_NAME == "staging"
