@@ -20,7 +20,6 @@ test-functional:
       allow_failure: true
     # This ensures that only pushes to the staging / testing branch
     - if: $CI_COMMIT_REF_NAME == "staging"
-      when: manual
       allow_failure: true
 
 test-release-pypi-test:
