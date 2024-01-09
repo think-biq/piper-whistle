@@ -7,8 +7,13 @@
 
     https://think-biq.com
 """
+import sys
 from src.piper_whistle.cli import main as cli_main
 
 
 if '__main__' == __name__:
-    cli_main ()
+    """! Local execution script shorthand."""
+    # Call CLI entry function.
+    r = cli_main ()
+    # Exit with return code.
+    sys.exit (r)
