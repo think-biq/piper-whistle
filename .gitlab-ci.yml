@@ -8,8 +8,7 @@ functional-test:
     - pip install -r requirements.txt
     - python3 -m unittest src/testing/functional.py
   rules:
-    # This ensures that only pushes to the default branch will trigger
-    # a pages deploy
+    # This ensures that only pushes to the default branch are considered.
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       allow_failure: true
 
@@ -22,8 +21,11 @@ release-pypi-test:
     - python3 -m build -s -w -o build/release
     - twine upload --config-file ${PYPI_CONFIG_FILE} -r testpypi build/release/*
   rules:
-    # This ensures that only pushes to the default branch will trigger
-    # a pages deploy
+    # This ensures that only pushes to the release branch
+    - if: $CI_COMMIT_REF_NAME == "release"
+      when: manual
+      allow_failure: true
+    # or main branch are considered.
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       when: manual
       allow_failure: true
@@ -37,10 +39,8 @@ release-pypi:
     - python3 -m build -s -w -o build/release
     - twine upload --config-file ${PYPI_LIVE_CONFIG_FILE} build/release/*
   rules:
-    # This ensures that only pushes to the default branch will trigger
-    # a pages deploy
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-      when: manual
+    # This ensures that only pushes to the release branch trigger sync.
+    - if: $CI_COMMIT_REF_NAME == "release"
       allow_failure: true
 
 pages:
@@ -57,10 +57,8 @@ pages:
       # The folder that contains the files to be exposed at the Page URL
       - public
   rules:
-    # This ensures that only pushes to the default branch will trigger
-    # a pages deploy
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-      when: manual
+    # This ensures that only pushes to the release branch trigger sync.
+    - if: $CI_COMMIT_REF_NAME == "release"
       allow_failure: true
 
 sync:
@@ -80,8 +78,10 @@ sync:
     - git push --all
     - git push --tags
   rules:
-    # This ensures that only pushes to the default branch will trigger
-    # a pages deploy
+    # This ensures that only pushes to the release branch trigger sync.
+    - if: $CI_COMMIT_REF_NAME == "release"
+      allow_failure: true
+    # or main branch are considered.
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       when: manual
       allow_failure: true
