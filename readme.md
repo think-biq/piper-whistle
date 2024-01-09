@@ -1,6 +1,7 @@
 # piper-whistle
 
 Tool to manage voices used with the [piper][1] speech synthesizer. You may also browse the [docs online][2] at https://think-biq.gitlab.io/piper-whistle/
+There is also [a quick guide](https://hackernoon.com/how-to-set-up-piper-speech-synthesizer-on-a-local-machine) on how to setup and use piper and (piper-)whistle.
 
 ## usage
 
@@ -11,7 +12,7 @@ piper_whistle [-h] [-d] [-v] [-V] [-P DATA_ROOT] [-R]
 positional arguments:
   {guess,path,speak,list,preview,install,remove}
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -d, --debug           Activate very verbose logging.
   -v, --verbose         Activate verbose logging.
@@ -31,7 +32,7 @@ piper_whistle guess [-h] [-v] language_name
 positional arguments:
   language_name  A string representing a language name (or code).
 
-optional arguments:
+options:
   -h, --help     show this help message and exit
   -v, --verbose  Activate verbose logging.
 ```
@@ -46,7 +47,7 @@ piper_whistle path [-h] [-v] voice_selector
 positional arguments:
   voice_selector  Selector of voice to search.
 
-optional arguments:
+options:
   -h, --help      show this help message and exit
   -v, --verbose   Activate verbose logging.
 ```
@@ -72,7 +73,7 @@ piper_whistle speak [-h] [-c CHANNEL] [-j] [-r] [-o OUTPUT] [-v] something
 positional arguments:
   something             Something to speak.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -c CHANNEL, --channel CHANNEL
                         Path to channel (named pipe (aka. fifo)) to which piper is
@@ -109,17 +110,19 @@ after [piper][1] has finished the first payload. This way you can continually pr
 ### list
 
 ```bash
-piper_whistle list [-h] [-v] [-I] [-a] [-L] [-g] [-p] [-l LANGUAGE_CODE]
+piper_whistle list [-h] [-v] [-I] [-a] [-L] [-g] [-U] [-S] [-p] [-l LANGUAGE_CODE]
                     [-i VOICE_INDEX]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -v, --verbose         Activate verbose logging.
   -I, --installed       Only list installed voices.
   -a, --all             List voices for all available languages.
   -L, --languages       List available languages.
   -g, --legal           Show avaiable legal information.
-  -p, --install-path    List path of voice (if installed).
+  -U, --show-url        Show URL of voice on remote host.
+  -S, --omit-speakers   Omit speakers form listing.
+  -p, --install-path    Show path of voice (if installed).
   -l LANGUAGE_CODE, --language-code LANGUAGE_CODE
                         Only list voices matching this language.
   -i VOICE_INDEX, --voice-index VOICE_INDEX
@@ -129,16 +132,17 @@ optional arguments:
 This command lets you investigate available voices for specific languages, or
 simply list all available voices. Using the --installed switch, you can filter
 voices that are currently installed in the local cache directory. The cache is
-located in the user app path, as provided by [userpaths](https://pypi.org/project/userpaths/) pip package. On linux this would be `${HOME}/.config/piper-whistle`.
+located in the user app path, as provided by [userpaths](https://pypi.org/project/userpaths/) pip package. On linux this would be `${HOME}/.config/piper-whistle`. You may also get the model path on the remote host using -U.
 
 ### preview
 
 ```bash
-piper_whistle preview [-h] [-l LANGUAGE_CODE] [-i VOICE_INDEX] [-s SPEAKER_INDEX]
-                       [-D]
+piper_whistle preview [-h] [-v] [-l LANGUAGE_CODE] [-i VOICE_INDEX]
+                       [-s SPEAKER_INDEX] [-D]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
+  -v, --verbose         Activate verbose logging.
   -l LANGUAGE_CODE, --language-code LANGUAGE_CODE
                         Select language.
   -i VOICE_INDEX, --voice-index VOICE_INDEX
@@ -160,7 +164,7 @@ positional arguments:
   language_code  Select language.
   voice_index    Specific language voice. (defaults to first one)
 
-optional arguments:
+options:
   -h, --help     show this help message and exit
   -v, --verbose  Activate verbose logging.
   -D, --dry-run  Simulate download / install.
@@ -180,7 +184,7 @@ piper_whistle remove [-h] [-v] voice_selector
 positional arguments:
   voice_selector  Selector of voice to search.
 
-optional arguments:
+options:
   -h, --help      show this help message and exit
   -v, --verbose   Activate verbose logging.
 ```

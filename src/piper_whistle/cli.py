@@ -141,7 +141,7 @@ def create_arg_parser ():
 	)
 	list_args.add_argument ('-S', '--omit-speakers'
 		, action='store_true'
-		, help='Show URL of voice on remote host.'
+		, help='Omit speakers form listing.'
 		, default=False
 	)
 	list_args.add_argument ('-p', '--install-path'
