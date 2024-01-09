@@ -11,6 +11,10 @@ functional-test:
     # This ensures that only pushes to the default branch are considered.
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       allow_failure: true
+    # This ensures that only pushes to the staging / testing branch
+    - if: $CI_COMMIT_REF_NAME == "staging"
+      when: manual
+      allow_failure: true
 
 release-pypi-test:
   script:
@@ -21,9 +25,8 @@ release-pypi-test:
     - python3 -m build -s -w -o build/release
     - twine upload --config-file ${PYPI_CONFIG_FILE} -r testpypi build/release/*
   rules:
-    # This ensures that only pushes to the release branch
-    - if: $CI_COMMIT_REF_NAME == "release"
-      when: manual
+    # This ensures that only pushes to the staging / testing branch
+    - if: $CI_COMMIT_REF_NAME == "staging"
       allow_failure: true
     # or main branch are considered.
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
@@ -59,6 +62,10 @@ pages:
   rules:
     # This ensures that only pushes to the release branch trigger sync.
     - if: $CI_COMMIT_REF_NAME == "release"
+      allow_failure: true
+    # or main branch are considered.
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      when: manual
       allow_failure: true
 
 sync:

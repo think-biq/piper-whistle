@@ -11,3 +11,5 @@ share
 pyvenv.cfg
 *.log
 __pycache__
+test.pypi.cfg
+.python-version
