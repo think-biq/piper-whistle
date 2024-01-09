@@ -1,4 +1,4 @@
-"""Logging tool.
+"""Holz logging tool.
 
 Utility functions to help with logging setup.
 """
@@ -9,116 +9,177 @@ import logging
 default_level = logging.WARNING
 default_logger_name = 'holz'
 default_logger = logging.getLogger (default_logger_name)
+# All options at https://docs.python.org/3.8/library/logging.html#logrecord-attributes
 default_format_str = u'[%(asctime)s][%(levelname)s][%(name)s]: %(message)s'
 default_formatter = logging.Formatter (default_format_str)
+default_overrides = {}
+default_setup_silent = False
+default_flush = False
 logging.basicConfig (level = default_level, format = default_format_str)
 
+ALWAYS_FLUSH = False
+CURRENT_LOG_OVERRIDES = default_overrides
 
-def configure (l, lvl, fmt):
+
+def configure (l, lvl, fmt, silent = False):
+	'''Recreates output stream and configures given logger.'''
 	# Avoid propagation and clear previous stream handlers.
 	l.propagate = False
 	l.handlers.clear ()
 
 	# Change logger level.
-	default_logger.debug (f'Setting {l} to level {lvl}')
+	if not silent:
+		default_logger.debug (f'Setting {l} to level {lvl}')
 	l.setLevel (lvl)
 
 	# Create streaming log channler and set level.
 	ch = logging.StreamHandler ()
 	ch.setLevel (lvl)
 	ch.setFormatter (fmt)
+	ch.set_name(f'{l.name}:StreamHandler')
 	l.addHandler (ch)
 
 	return l
 
 
-def setup (log_name, log_level = default_level, log_formatter = default_formatter):
+def _handle_logger_config_override (overrides, l, silent = default_setup_silent):
+	'''Utility function to override logger specific configurations.'''
+	lvl = overrides[l.name]['level']
+	fmttr = default_formatter
+	if 'formatter' in overrides[l.name] \
+		and not (overrides[l.name]['formatter'] is None \
+		):
+		fmttr = overrides[l]['formatter']
+	configure (l, lvl, fmttr, silent = silent)
+
+
+def setup (log_name
+	, log_level = default_level
+	, log_formatter = default_formatter
+	, silent = False
+):
+	'''Create and configure a specific logger.'''
 	logger = logging.getLogger (log_name)
 	logger = configure (logger
 		, log_level
 		, log_formatter
+		, silent = silent
 	)
 
 	return logger
 
 
-def setup_default (log_name, log_level = default_level, log_formatter = default_formatter):
+def activate_flush_always (flush):
+	'''Indicate holz should flush logging output always.'''
+	global ALWAYS_FLUSH
+	ALWAYS_FLUSH = flush
+
+
+def setup_default (log_name
+	, log_level = default_level
+	, log_formatter = default_formatter
+	, log_overrides = {}
+	, silent = False
+):
+	'''Configure holz default values.'''
 	global default_logger_name
 	global default_logger
 	global default_level
 	global default_formatter
+	global default_overrides
+	global default_setup_silent
 
-	default_logger.info (f'Changing default log to "{log_name}".')
+	if not silent:
+		default_logger.debug (f'Changing default log to "{log_name}".')
 
 	default_logger_name = log_name
 	default_level = log_level
 	default_formatter = log_formatter
+	default_overrides = log_overrides
+	default_setup_silent = silent
 	default_logger = setup (default_logger_name
 		, default_level
 		, default_formatter
+		, default_setup_silent
 	)
 
 	return default_logger
 
 
-def normalize (overrides = {}):
+def normalize (overrides = {}, silent = default_setup_silent):
+	'''Looks for all known logger and normalizes their output and level.'''
+	global CURRENT_LOG_OVERRIDES
+
+	if CURRENT_LOG_OVERRIDES != overrides:
+		CURRENT_LOG_OVERRIDES = overrides
+
 	# collect all logges and normalize their setup / configuration
 	loggers = [logging.getLogger ()] \
 		+ [logging.getLogger (name) for name in logging.root.manager.loggerDict]
 
 	for l in loggers:
-		default_logger.debug (f'Normalizing setup for logger {l} ...')
-		if l.name in overrides:
-			default_logger.debug (f'Found override for "{l}". Applying ...')
-			lvl = overrides[l.name]['level']
-			fmttr = default_formatter
-			if 'formatter' in overrides[l.name] and not (overrides[l.name]['formatter'] is None):
-				fmttr = overrides[l]['formatter']
-			configure (l, lvl, fmttr)
+		if not silent:
+			default_logger.debug (f'Normalizing setup for logger {l} ...')
+		if l.name in CURRENT_LOG_OVERRIDES:
+			if not silent:
+				default_logger.debug (f'Found override for "{l}". Applying ...')
+			_handle_logger_config_override (CURRENT_LOG_OVERRIDES
+				, l
+				, silent = silent
+			)
 		else:
-			configure (l, default_level, default_formatter)
+			configure (l, default_level, default_formatter, silent = silent)
 
 
-def debug (message, category = None):
+def _log (method, message, category, flush = default_flush):
+	'''Fetches logger and outputs message with level-specific output.'''
 	logger = None
 	if category:
 		logger = logging.getLogger (category)
 	else:
 		logger = default_logger
-	logger.debug (message)
+	m = getattr (logger, method)
+	m (message)
+	if flush or ALWAYS_FLUSH:
+		for h in logger.handlers:
+			print (f'Flushing {h.get_name ()} ...')
+			h.flush ()
 
 
-def info (message, category = None):
-	logger = None
-	if category:
-		logger = logging.getLogger (category)
-	else:
-		logger = default_logger
-	logger.info (message)
+def debug (message, category = None, flush = False):
+	_log ('debug', message, category, flush)
 
 
-def warn (message, category = None):
-	logger = None
-	if category:
-		logger = logging.getLogger (category)
-	else:
-		logger = default_logger
-	logger.warning (message)
+def info (message, category = None, flush = False):
+	_log ('info', message, category, flush)
 
 
-def error (message, category = None):
-	logger = None
-	if category:
-		logger = logging.getLogger (category)
-	else:
-		logger = default_logger
-	logger.error (message)
+def warn (message, category = None, flush = False):
+	_log ('warning', message, category, flush)
 
 
-def fatal (message, category = None):
-	logger = None
-	if category:
-		logger = logging.getLogger (category)
-	else:
-		logger = default_logger
-	logger.fatal (message)
+def error (message, category = None, flush = False):
+	_log ('error', message, category, flush)
+
+
+def fatal (message, category = None, flush = False):
+	_log ('fatal', message, category, flush)
+
+
+class HolzNotifyLogger(logging.Logger):
+	"""
+	Logger subclass to notify holz when a new logger is created / requested.
+	"""
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		global ON_LOGGER_REQUESTED
+		
+		if self.name in CURRENT_LOG_OVERRIDES:
+			print (f'Logger override. {self.name}')
+			_handle_logger_config_override(CURRENT_LOG_OVERRIDES
+				, self
+				, default_setup_silent
+			)
+
+
+logging.setLoggerClass(HolzNotifyLogger)

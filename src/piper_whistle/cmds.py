@@ -74,7 +74,10 @@ def run_guess (context, args):
 
 	if matching_code:
 		lang = context['db']['languages'][matching_code]
-		holz.info (f'Best guess for "{target_lang}": {matching_code} ({lang["name_native"]} [{lang["name_english"]}])')
+		holz.info (
+			f'Best guess for "{target_lang}": '
+			f'{matching_code} ({lang["name_native"]} [{lang["name_english"]}])'
+		)
 		sys.stdout.write (matching_code)
 		return 0
 
@@ -158,12 +161,16 @@ def run_list (context, args):
 
 	if args.installed:
 		for model in db.model_list_installed (context['paths']):
-			sys.stdout.write (f"\t{model['code']}:{model['name']}@{model['quality']}")
+			sys.stdout.write (
+				f"\t{model['code']}:{model['name']}@{model['quality']}"
+			)
 			if args.verbose:
 				sys.stdout.write (f"\t{model['path']}")
 			if args.legal:
 				lgl = context['db']['legal'][model['name']]
-				a = f"Voice[{lgl['training']}]: {lgl['license']}, Reference: {lgl['reference']}, Dataset: {lgl['dataset-url']}"
+				a = f"Voice[{lgl['training']}]: {lgl['license']}, " \
+					f"Reference: {lgl['reference']}, " \
+					f"Dataset: {lgl['dataset-url']}"
 				sys.stdout.write (f"\t{a}")
 			sys.stdout.write ("\n")
 
@@ -179,7 +186,9 @@ def run_list (context, args):
 				details = voice_name
 				if args.legal:
 					lgl = context['db']['legal'][voice_name]
-					a = f"Voice[{lgl['training']}]: {lgl['license']}, Reference: {lgl['reference']}, Dataset: {lgl['dataset-url']}"
+					a = f"Voice[{lgl['training']}]: {lgl['license']}, " \
+						f"Reference: {lgl['reference']}, " \
+						f"Dataset: {lgl['dataset-url']}"
 					details = f"{details} ({a})"
 				sys.stdout.write (f"\t{voice_i}: {details}\n")
 
@@ -202,7 +211,9 @@ def run_list (context, args):
 		sys.stdout.write (f'{voice_name}\t{voice_i}')
 		if args.legal:
 			lgl = context['db']['legal'][voice_name]
-			a = f"Voice[{lgl['training']}]: {lgl['license']}, Reference: {lgl['reference']}, Dataset: {lgl['dataset-url']}"
+			a = f"Voice[{lgl['training']}]: {lgl['license']}, "\
+				f"Reference: {lgl['reference']}, " \
+				f"Dataset: {lgl['dataset-url']}"
 			sys.stdout.write (f'\t{a}')
 		sys.stdout.write ('\n')
 		speakers = index[voice_name]['speaker_id_map']
@@ -219,7 +230,9 @@ def run_list (context, args):
 			sys.stdout.write (f"\t{voice_i}: {voice_name}")
 			if args.legal:
 				lgl = context['db']['legal'][voice_name]
-				a = f"Voice[{lgl['training']}]: {lgl['license']}, Reference: {lgl['reference']}, Dataset: {lgl['dataset-url']}"
+				a = f"Voice[{lgl['training']}]: {lgl['license']}, " \
+					f"Reference: {lgl['reference']}, " \
+					f"Dataset: {lgl['dataset-url']}"
 				sys.stdout.write (f'\t{a}')
 			sys.stdout.write ('\n')
 
@@ -254,46 +267,50 @@ def run_preview (context, args):
 		holz.error ('Could not find sample for this voice.')
 		return 13
 
-	local_voice_path = f"{context['paths']['voices']}/{download_info['local_path_relative']}"
-	samples_path_abs = os.path.realpath (f"{local_voice_path}/samples")
-	with pathlib.Path (samples_path_abs) as p:
-		p.mkdir (parents=True, exist_ok=True)
-		
-		filename = os.path.basename (speaker_url)
-		file_path = p.joinpath (filename)
-		if file_path.exists ():
-			holz.info ('Cached file detected.')
-		else:
-			holz.info (f'Downloading ({speaker_url}) ...')
-			if dry_run:
-				sys.stdout.write (f'dl {speaker_url} > {file_path.as_posix ()}\n')
-			else:
-				r = util.download_as_stream_with_progress (speaker_url, file_path.as_posix ())
-				if 0 > r:
-					holz.error ('Error downloading model.')
-					return 13
+	p = pathlib.Path (f"{context['paths']['voices']}")
+	p = p.joinpath (f"{download_info['local_path_relative']}")
+	p = p.joinpath (f"{local_voice_path}/samples")
+	p = p.resolve ()
 
-		sys.stderr.write (f'Playing {file_path.as_posix ()} ...\n')
+	p.mkdir (parents=True, exist_ok=True)
+	
+	filename = os.path.basename (speaker_url)
+	file_path = p.joinpath (filename)
+	if file_path.exists ():
+		holz.info ('Cached file detected.')
+	else:
+		holz.info (f'Downloading ({speaker_url}) ...')
 		if dry_run:
-			sys.stdout.write (f'Dry-run, skipping play.')
+			sys.stdout.write (f'dl {speaker_url} > {file_path.as_posix ()}\n')
 		else:
-			if not file_path.exists ():
-				holz.error ('File not found.')
+			r = util.download_as_stream_with_progress (
+				speaker_url, file_path.as_posix ()
+			)
+			if 0 > r:
+				holz.error ('Error downloading model.')
 				return 13
 
-			# Suppress playsound's warning message about pygobject.
-			# Has to be done before loading modulde, since the loading code
-			# is producing the log message.
-			import logging
-			holz.setup ('playsound', logging.ERROR)
+	sys.stderr.write (f'Playing {file_path.as_posix ()} ...\n')
+	if dry_run:
+		sys.stdout.write (f'Dry-run, skipping play.')
+	else:
+		if not file_path.exists ():
+			holz.error ('File not found.')
+			return 13
 
-			# After setup, load the module and play the sound.
-			from playsound import playsound
-			# TODO: On linux, this spins up another python instance, which is 
-			# not the most convenient way in terms of stopping / cancelling.
-			playsound (file_path.as_posix (), block = True)
+		# Suppress playsound's warning message about pygobject.
+		# Has to be done before loading modulde, since the loading code
+		# is producing the log message.
+		import logging
+		holz.setup ('playsound', logging.ERROR)
 
-			holz.info (f'Finished with: 0')
+		# After setup, load the module and play the sound.
+		from playsound import playsound
+		# TODO: On linux, this spins up another python instance, which is 
+		# not the most convenient way in terms of stopping / cancelling.
+		playsound (file_path.as_posix (), block = True)
+
+		holz.info (f'Finished with: 0')
 
 	return 0
 
@@ -314,43 +331,53 @@ def run_install (context, args):
 	if not download_info:
 		holz.error ('Could not find any downloads for this configuration.')
 		return 13
+	
+	p = pathlib.Path (f"{context['paths']['voices']}")
+	p = p.joinpath (f"{download_info['local_path_relative']}")
+	p = p.resolve ()
 
-	local_voice_path = os.path.realpath (f"{context['paths']['voices']}/{download_info['local_path_relative']}")
-	holz.info (local_voice_path)
-	with pathlib.Path (local_voice_path) as p:
-		p.mkdir (parents=True, exist_ok=True)
+	p.mkdir (parents=True, exist_ok=True)
+	holz.info (f'Using voice path at: {p}')
 
-		config_url = download_info['config']['url']
-		config_file_path = p.joinpath (os.path.basename (config_url))
-		if not config_file_path.exists ():
-			size = util.float_round (float (download_info['config']['size']) / 1024)
-			holz.info (f'Fetching config ({size}kb) ...')
-			if not dry_run:
-				r = util.download_as_stream_with_progress (config_url, config_file_path.as_posix ())
-				if 0 > r:
-					holz.error ('Error downloading config.')
-					return 13
+	config_url = download_info['config']['url']
+	config_file_path = p.joinpath (os.path.basename (config_url))
+	if not config_file_path.exists ():
+		size = util.float_round (float (download_info['config']['size']) / 1024)
+		holz.info (f'Fetching config ({size}kb) ...')
+		if not dry_run:
+			r = util.download_as_stream_with_progress (config_url
+				, config_file_path.as_posix ()
+			)
+			if 0 > r:
+				holz.error ('Error downloading config.')
+				return 13
 
-		else:
-			holz.info ('Config already cached.')
+	else:
+		holz.info ('Config already cached.')
 
-		model_url = download_info['model']['url']
-		model_file_name = os.path.basename (model_url)
-		model_name = model_file_name.split ('.')[0]
-		model_file_path = p.joinpath (model_file_name)
-		if not model_file_path.exists ():
-			size = util.float_round (float (download_info['model']['size']) / 1024 / 1024)
-			holz.info (f'Fetching {model_name} ({size}mb) ...')
-			if not dry_run:
-				r = util.download_as_stream_with_progress (model_url, model_file_path.as_posix ())
-				if 0 > r:
-					holz.error ('Error downloading model.')
-					return 13
-		else:
-			holz.info ('Model already cached.')
+	model_url = download_info['model']['url']
+	model_file_name = os.path.basename (model_url)
+	model_name = model_file_name.split ('.')[0]
+	model_file_path = p.joinpath (model_file_name)
+	if not model_file_path.exists ():
+		size = util.float_round (
+			float (download_info['model']['size'])
+			/ 1024
+			/ 1024
+		)
+		holz.info (f'Fetching {model_name} ({size}mb) ...')
+		if not dry_run:
+			r = util.download_as_stream_with_progress (
+				model_url, model_file_path.as_posix ()
+			)
+			if 0 > r:
+				holz.error ('Error downloading model.')
+				return 13
+	else:
+		holz.info ('Model already cached.')
 
-		selector = download_info["selection_name"]
-		sys.stdout.write (f'{selector}\t{model_name}\t{model_file_path}')
+	selector = download_info["selection_name"]
+	sys.stdout.write (f'{selector}\t{model_name}\t{model_file_path}')
 
 	return 0
 

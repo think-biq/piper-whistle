@@ -229,6 +229,7 @@ def main ():
 		log_level = logging.INFO
 	# Setup default log level and initialize holz logging utility.
 	holz.setup_default ('whistle', log_level)
+	holz.activate_flush_always (True)
 	holz.normalize ()
 
 	if args.version:
