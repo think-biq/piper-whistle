@@ -17,7 +17,7 @@ from piper_whistle import util
 
 
 def version ():
-	return "1.6.78"
+	return "1.6.83"
 
 
 __all__ = ['cli', 'cmds', 'db', 'search', 'version']
