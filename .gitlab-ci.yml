@@ -94,7 +94,7 @@ pages:
   stage: finalize
   script:
     - echo "Building documentation ..."
-    - make -C docs
+    - make docs-build
     - echo "Exposing as public ..."
     - mv docs/published public
     - echo "Result:"
