@@ -14,6 +14,7 @@ import logging
 from contextlib import redirect_stderr, redirect_stdout
 from unittest.mock import patch
 from ..piper_whistle import cli as piper_whistle_cli
+from ..piper_whistle import version as piper_whistle_version
 
 
 log = logging.getLogger ('tmplr')
@@ -25,6 +26,10 @@ class TmplrFile (string.Template):
 
 def version ():
 	return "0.6.18"
+
+
+def whistle_version ():
+	return piper_whistle_version.as_string ()
 
 
 def create_arg_parser ():
@@ -118,7 +123,7 @@ def run_docs_cfg (args):
 
 	# Stores template values.
 	tmpl_subs = {
-		'whistle_version': piper_whistle.version ()
+		'whistle_version': whistle_version ()
 	}
 
 	# Fill template.

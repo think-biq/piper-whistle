@@ -2,3 +2,4 @@ html/
 published/
 *.log
 *.live
+docs.cfg
