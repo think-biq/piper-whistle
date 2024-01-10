@@ -13,7 +13,7 @@ import string
 import logging
 from contextlib import redirect_stderr, redirect_stdout
 from unittest.mock import patch
-from .. import piper_whistle
+from ..piper_whistle import cli as piper_whistle_cli
 
 
 log = logging.getLogger ('tmplr')
@@ -94,7 +94,7 @@ def _run_whistle_main (cmd_args):
 	"""! Runs piper-whistle cli and captures stdout as string."""
 	cli_output = io.StringIO ()
 	with redirect_stdout (cli_output):
-		r = piper_whistle.cli.main (cmd_args)
+		r = piper_whistle_cli.main (cmd_args)
 
 	out_str = cli_output.getvalue ().strip ()
 	return out_str
@@ -154,7 +154,7 @@ def run_build_readme (args):
 	tmpl_subs['help_text_root'] = _run_whistle_main (['whistle', '-h'])
 
 	# Generate help messages for sub commands.
-	for cmd in piper_whistle.cli.commands:
+	for cmd in piper_whistle_cli.commands:
 		cmd_args = ['whistle', cmd, '-h']
 		out_str = _run_whistle_main (cmd_args)
 		tmpl_var_name = f'help_text_{cmd}'
