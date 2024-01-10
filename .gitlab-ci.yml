@@ -93,6 +93,8 @@ release-pypi:
 pages:
   stage: finalize
   script:
+    - echo "Install requirements ..."
+    - make pip-update-all
     - echo "Building documentation ..."
     - make docs-build
     - echo "Exposing as public ..."
