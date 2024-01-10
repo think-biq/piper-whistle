@@ -4,6 +4,7 @@ image: thinkbiq/ue-plugin-staging:latest
 stages:
   - pre-release-test
   - release
+  - grace
   - post-release-test
   - finalize
 
@@ -61,6 +62,20 @@ release-pypi-test:
     # or main branch are considered.
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       when: manual
+      allow_failure: true
+
+delay-before-checking-pypi-test:
+  # Helps give pypi index time to refresh cache.
+  stage: grace
+  variables:
+    DELAY_IN_SECONDS: 13
+  script:
+    - echo "Sleeping for ${DELAY_IN_SECONDS} seconds ..."
+    - sleep ${DELAY_IN_SECONDS}
+    - echo "Done."
+  rules:
+    # This ensures that only pushes to the staging / testing branch
+    - if: $CI_COMMIT_REF_NAME == "staging"
       allow_failure: true
 
 release-pypi:
