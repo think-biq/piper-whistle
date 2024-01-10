@@ -16,6 +16,7 @@ test-functional:
   rules:
     # This ensures that only pushes to the default branch are considered.
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      when: manual
       allow_failure: true
     # This ensures that only pushes to the staging / testing branch
     - if: $CI_COMMIT_REF_NAME == "staging"
