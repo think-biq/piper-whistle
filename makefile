@@ -38,13 +38,13 @@ build-wheel:
 	python3 "$(PROJECT_DIR)/setup.py" bdist_wheel
 
 pip-update-pip:
-    python3 -m pip install -U pip
+	python3 -m pip install -U pip
 
 pip-install-dev:
-    python3 -m pip install -r requirements.dev.txt
+	python3 -m pip install -r requirements.dev.txt
 
 pip-install-runtime:
-    python3 -m pip install -r requirements.txt
+	python3 -m pip install -r requirements.txt
 
 release:
 	mkdir -p "$(PROJECT_DIR)/build/release"

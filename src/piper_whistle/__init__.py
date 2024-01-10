@@ -10,7 +10,7 @@ from . import util
 
 
 def version ():
-	return "1.6.73"
+	return "1.6.78"
 
 
 if '__main__' == __name__:
