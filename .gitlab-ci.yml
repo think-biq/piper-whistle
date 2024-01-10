@@ -10,10 +10,8 @@ stages:
 test-functional:
   stage: pre-release-test
   script:
-    - pip install -U pip
-    - pip install -r requirements.dev.txt
-    - pip install -r requirements.txt
-    - python3 -m unittest src/testing/functional.py
+    - make pip-update-pip pip-install-dev pip-install-runtime
+    - make run-tests
   rules:
     # This ensures that only pushes to the default branch are considered.
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
@@ -52,11 +50,9 @@ release-pypi-test:
   variables:
     RELEASE_DIR: build/release
   script:
-    - python3 -m pip install -U pip
-    - python3 -m pip install -r requirements.dev.txt
-    - mkdir -p build/release
-    - python3 -m build -s -w -o build/release
-    - ls -lav build/release
+    - make pip-update-pip pip-install-dev
+    - make readme-build
+    - make release
     - twine upload -r testpypi --config-file "${PYPI_CONFIG_FILE}" --skip-existing ${RELEASE_DIR}/*
   rules:
     # This ensures that only pushes to the staging / testing branch
@@ -70,10 +66,9 @@ release-pypi-test:
 release-pypi:
   stage: release
   script:
-    - python3 -m pip install -U pip
-    - python3 -m pip install -r requirements.dev.txt
-    - mkdir -p build/release
-    - python3 -m build -s -w -o build/release
+    - make pip-update-pip pip-install-dev
+    - make readme-build
+    - make release
     - twine upload --config-file ${PYPI_LIVE_CONFIG_FILE} build/release/*
   rules:
     # This ensures that only pushes to the release branch trigger sync.
