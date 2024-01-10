@@ -138,14 +138,18 @@ class CliCommandTests (unittest.TestCase):
 		sys.stdout.write (f'\n[Teardown] Data directory after running tests:\n')
 		display_tree (cls.data_root_path.as_posix ())
 
-	def test_a0_create_index (self):
-		# Ask whistle to downlnoad and rebuild voice database.
+	def _run_whistle_main (self, args):
 		cli_output = io.StringIO ()
 		with redirect_stdout (cli_output):
-			with patch.object (sys, 'argv', self.test_arguments['create-index']):
-				whistle_cli.main ()
+			with patch.object (sys, 'argv', args):
+				whistle_cli.main (args)
 
 		out_str = cli_output.getvalue ().strip ()
+		return out_str
+
+	def test_a0_create_index (self):
+		# Ask whistle to downlnoad and rebuild voice database.
+		out_str = self._run_whistle_main (self.test_arguments['create-index'])
 		self.assertTrue (check_if_timestamp (out_str))
 
 		whistle_paths = whistle_db.data_paths (self.data_root_path.as_posix ())
@@ -153,43 +157,25 @@ class CliCommandTests (unittest.TestCase):
 
 	def test_b0_list_languages (self):
 		# Ask whistle to list all available languages.
-		cli_output = io.StringIO ()
-		with redirect_stdout (cli_output):
-			with patch.object (sys, 'argv', self.test_arguments['list-languages']):
-				whistle_cli.main ()
+		out_str = self._run_whistle_main (self.test_arguments['list-languages'])
 
-		out_str = cli_output.getvalue ().strip ()
 		self.assertEqual (out_str, expected_list_languages.strip ())
 
 	def test_c0_list_voice (self):
 		# Ask whistle to list the first voice for the german language.
-		cli_output = io.StringIO ()
-		with redirect_stdout (cli_output):
-			with patch.object (sys, 'argv', self.test_arguments['list-voice']):
-				whistle_cli.main ()
+		out_str = self._run_whistle_main (self.test_arguments['list-voice'])
 
-		out_str = cli_output.getvalue ().strip ()
 		self.assertEqual (out_str, expected_list_voice.strip ())
 
 	def test_d0_list_voice_legal (self):
 		# Ask whistle to list the first voice for the german language and the
 		# available legal information.
-		cli_output = io.StringIO ()
-		with redirect_stdout (cli_output):
-			with patch.object (sys, 'argv', self.test_arguments['list-voice-legal']):
-				whistle_cli.main ()
-
-		out_str = cli_output.getvalue ().strip ()
+		out_str = self._run_whistle_main (self.test_arguments['list-voice-legal'])
 		self.assertEqual (out_str, expected_list_voice_plus_legal.strip ())
 
 	def test_e0_install_voice (self):
 		# Ask whistle to install the first german voice at index 0.
-		cli_output = io.StringIO ()
-		with redirect_stdout (cli_output):
-			with patch.object (sys, 'argv', self.test_arguments['install-voice']):
-				whistle_cli.main ()
-
-		out_str = cli_output.getvalue ().strip ()
+		out_str = self._run_whistle_main (self.test_arguments['install-voice'])
 		out_parts = out_str.split ('\t')
 
 		self.assertEqual (out_parts[0], expected_install_voice[0])
@@ -204,32 +190,17 @@ class CliCommandTests (unittest.TestCase):
 
 	def test_f0_list_installed_voices (self):
 		# Ask whistle to list all installed voices.
-		cli_output = io.StringIO ()
-		with redirect_stdout (cli_output):
-			with patch.object (sys, 'argv', self.test_arguments['list-installed-voices']):
-				whistle_cli.main ()
-
-		out_str = cli_output.getvalue ().strip ()
+		out_str = self._run_whistle_main (self.test_arguments['list-installed-voices'])
 		self.assertEqual (out_str, expected_list_installed_voices.strip ())
 
 	def test_g0_show_voice_path (self):
 		# Ask whistle to show the path to the voice with name 'de_DE-eva_k-x_low'.
-		cli_output = io.StringIO ()
-		with redirect_stdout (cli_output):
-			with patch.object (sys, 'argv', self.test_arguments['show-path']):
-				whistle_cli.main ()
-
-		out_str = cli_output.getvalue ().strip ()
+		out_str = self._run_whistle_main (self.test_arguments['show-path'])
 		self.assertTrue (out_str.endswith (expected_show_path.strip ()))
 
 	def test_h0_remove_voice (self):
 		# Ask whistle to remove voice named 'de_DE-eva_k-x_low'.
-		cli_output = io.StringIO ()
-		with redirect_stdout (cli_output):
-			with patch.object (sys, 'argv', self.test_arguments['remove-voice']):
-				whistle_cli.main ()
-
-		out_str = cli_output.getvalue ().strip ()
+		out_str = self._run_whistle_main (self.test_arguments['remove-voice'])
 		self.assertEqual (out_str, expected_remove_voice.strip ())
 
 

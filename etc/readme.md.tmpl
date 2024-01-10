@@ -6,20 +6,7 @@ There is also [a quick guide](https://hackernoon.com/how-to-set-up-piper-speech-
 ## usage
 
 ```bash
-usage: piper_whistle [-h] [-d] [-v] [-V] [-P DATA_ROOT] [-R]
-                     {guess,path,speak,list,preview,install,remove} ...
-
-positional arguments:
-  {guess,path,speak,list,preview,install,remove}
-
-options:
-  -h, --help            show this help message and exit
-  -d, --debug           Activate very verbose logging.
-  -v, --verbose         Activate verbose logging.
-  -V, --version         Show version number.
-  -P DATA_ROOT, --data-root DATA_ROOT
-                        Root path where whistle should store config and data in.
-  -R, --refresh         Refreshes (or sets up) language index by downloading the latest lookup.
+:?{help_text_root}
 ```
 
 ## commands
@@ -27,14 +14,7 @@ options:
 ### guess
 
 ```bash
-usage: piper_whistle guess [-h] [-v] language_name
-
-positional arguments:
-  language_name  A string representing a language name (or code).
-
-options:
-  -h, --help     show this help message and exit
-  -v, --verbose  Activate verbose logging.
+:?{help_text_guess}
 ```
 
 Tries to guess the language you are looking for (and is supported by [piper][1]) from the name you provide.
@@ -42,14 +22,7 @@ Tries to guess the language you are looking for (and is supported by [piper][1])
 ### path
 
 ```bash
-usage: piper_whistle path [-h] [-v] voice_selector
-
-positional arguments:
-  voice_selector  Selector of voice to search.
-
-options:
-  -h, --help      show this help message and exit
-  -v, --verbose   Activate verbose logging.
+:?{help_text_path}
 ```
 
 Shows the local path to a specific model. The voice_selector has the format:
@@ -68,20 +41,7 @@ So for the example above, that would be ```en_GB-alba-medium```
 ### speak
 
 ```bash
-usage: piper_whistle speak [-h] [-c CHANNEL] [-j] [-r] [-o OUTPUT] [-v] something
-
-positional arguments:
-  something             Something to speak.
-
-options:
-  -h, --help            Show help message.
-  -c CHANNEL, --channel CHANNEL
-                        Path to channel (named pipe (aka. fifo)) to which piper is listening.
-  -j, --json            Encode the text as json payload. Is on by default.
-  -r, --raw             Encode the text directly.
-  -o OUTPUT, --output OUTPUT
-                        Instead of streaming to audio channel, specifies a path to wav file where speech will be store in.
-  -v, --verbose         Activate verbose logging.
+:?{help_text_speak}
 ```
 
 Currently only works on linux / bsd systems, with a FIFO (aka. named pipes) setup. The basic idea is, having one pipe accepting json input (provided by this command), which is listened to by [piper][1]. After [piper][1] has processed the audio, it is either saved to file or passed on to another FIFO, which can then be read by a streaming audio player like `aplay`.
@@ -108,14 +68,7 @@ after [piper][1] has finished the first payload. This way you can continually pr
 ### list
 
 ```bash
-usage: piper_whistle guess [-h] [-v] language_name
-
-positional arguments:
-  language_name  A string representing a language name (or code).
-
-options:
-  -h, --help     show this help message and exit
-  -v, --verbose  Activate verbose logging.
+:?{help_text_guess}
 ```
 
 This command lets you investigate available voices for specific languages, or
@@ -126,14 +79,7 @@ located in the user app path, as provided by [userpaths](https://pypi.org/projec
 ### preview
 
 ```bash
-usage: piper_whistle guess [-h] [-v] language_name
-
-positional arguments:
-  language_name  A string representing a language name (or code).
-
-options:
-  -h, --help     show this help message and exit
-  -v, --verbose  Activate verbose logging.
+:?{help_text_guess}
 ```
 
 With `preview`, you can download and play samples audio files, for any voice
@@ -142,14 +88,7 @@ supported by [piper][1]. It currently uses [mplayer](http://www.mplayerhq.hu/) t
 ### install
 
 ```bash
-usage: piper_whistle guess [-h] [-v] language_name
-
-positional arguments:
-  language_name  A string representing a language name (or code).
-
-options:
-  -h, --help     show this help message and exit
-  -v, --verbose  Activate verbose logging.
+:?{help_text_guess}
 ```
 
 With `install` you can fetch available voice models and store them locally for
@@ -161,14 +100,7 @@ stored in the local user data path as provide by [userpaths](https://pypi.org/pr
 ### remove
 
 ```bash
-usage: piper_whistle guess [-h] [-v] language_name
-
-positional arguments:
-  language_name  A string representing a language name (or code).
-
-options:
-  -h, --help     show this help message and exit
-  -v, --verbose  Activate verbose logging.
+:?{help_text_guess}
 ```
 
 Any installed voice model can be deleted, via `remove`. You may pass the model name or shorthand selector.

@@ -10,11 +10,7 @@ release: build
 
 build: clean
 	mkdir -p "$(PROJECT_DIR)/published"
-	$(shell python3 "$(PROJECT_DIR)/build-config.py" \
-		$(shell python3 "$(PROJECT_DIR)/../src/piper_whistle/__init__.py") \
-		"$(PROJECT_DIR)/docs.cfg"\
-		"$(PROJECT_DIR)/docs.cfg.live")
-	doxygen "$(PROJECT_DIR)/docs.cfg.live" \
+	doxygen "$(PROJECT_DIR)/docs.cfg" \
 		> "$(PROJECT_DIR)/docs.log" \
 		2> "$(PROJECT_DIR)/docs.err.log"
 

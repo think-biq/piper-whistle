@@ -6,7 +6,20 @@ PROJECT_DIR := $(realpath -s $(shell dirname $(FILE_PATH)))
 SHELL := /bin/bash 
 
 
-docs-build:
+#	$(shell python3 "$(PROJECT_DIR)/build-config.py" \
+#		$(shell python3 "$(PROJECT_DIR)/../src/piper_whistle/__init__.py") \
+#		"$(PROJECT_DIR)/docs.cfg"\
+#		"$(PROJECT_DIR)/docs.cfg.live")
+
+readme-build:
+	python3 tmplr build-readme \
+		"$(PROJECT_DIR)/etc/readme.md.tmpl" \
+		"$(PROJECT_DIR)/readme.md"
+
+docs-build: readme-build
+	python3 tmplr build-docs-cfg \
+		"$(PROJECT_DIR)/etc/docs.cfg.tmpl" \
+		"$(PROJECT_DIR)/docs/docs.cfg"
 	make -C docs
 
 run-tests:

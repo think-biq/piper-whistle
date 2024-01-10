@@ -539,24 +539,24 @@ def model_list_installed (paths):
 	@return Returns a list containing all installed models.
 	"""
 	models = []
-	with pathlib.Path (paths['voices']) as p:
-		for lang_dir in p.iterdir ():
-			code = lang_dir.name
-			for voice_dir in lang_dir.iterdir ():
-				onnx_file_path = voice_dir.joinpath (f'{voice_dir.name}.onnx')
-				if not onnx_file_path.exists ():
-					continue
+	p = pathlib.Path (paths['voices'])
+	for lang_dir in p.iterdir ():
+		code = lang_dir.name
+		for voice_dir in lang_dir.iterdir ():
+			onnx_file_path = voice_dir.joinpath (f'{voice_dir.name}.onnx')
+			if not onnx_file_path.exists ():
+				continue
 
-				# name has language code prepended. remove.
-				rest = voice_dir.name.replace (f'{code}-', '')
-				# now split off quality
-				voice_name, voice_quality = rest.split ('-')
-				models.append ({
-					'name': voice_name,
-					'quality': voice_quality,
-					'code': code,
-					'path': onnx_file_path.as_posix ()
-				})
+			# name has language code prepended. remove.
+			rest = voice_dir.name.replace (f'{code}-', '')
+			# now split off quality
+			voice_name, voice_quality = rest.split ('-')
+			models.append ({
+				'name': voice_name,
+				'quality': voice_quality,
+				'code': code,
+				'path': onnx_file_path.as_posix ()
+			})
 
 	return models
 
@@ -584,18 +584,18 @@ def model_resolve_path (paths, model_info):
 	speaker = model_info['speaker']
 
 	voice_file_path = None
-	with pathlib.Path (paths['voices']) as p:
-		for lang_dir in p.iterdir ():
-			code = lang_dir.name
-			for voice_dir in lang_dir.iterdir ():
-				# name has language code prepended. remove.
-				rest = voice_dir.name.replace (f'{code}-', '')
-				# now split off quality
-				voice_name, voice_quality = rest.split ('-')
-				if voice_name == name and voice_quality == quality:
-					filename = f'{voice_dir.name}.onnx'
-					voice_file_path = voice_dir.joinpath (filename).as_posix ()
-					break
+	p = pathlib.Path (paths['voices'])
+	for lang_dir in p.iterdir ():
+		code = lang_dir.name
+		for voice_dir in lang_dir.iterdir ():
+			# name has language code prepended. remove.
+			rest = voice_dir.name.replace (f'{code}-', '')
+			# now split off quality
+			voice_name, voice_quality = rest.split ('-')
+			if voice_name == name and voice_quality == quality:
+				filename = f'{voice_dir.name}.onnx'
+				voice_file_path = voice_dir.joinpath (filename).as_posix ()
+				break
 
 	return voice_file_path
 
@@ -610,15 +610,15 @@ def model_remove (paths, model_info):
 		holz.warn (f'Could not find model with name "{model_info["name"]}@{model_info["quality"]}".')
 		return False
 
-	with pathlib.Path (model_path) as p:
-		pr = p.resolve ().parent
-		
-		for model_part in pr.iterdir ():
-			holz.debug (f'Removing "{model_part}" ...')
-			model_part.unlink ()
+	p = pathlib.Path (model_path)
+	pr = p.resolve ().parent
+	
+	for model_part in pr.iterdir ():
+		holz.debug (f'Removing "{model_part}" ...')
+		model_part.unlink ()
 
-		holz.debug (f'Removing "{pr}" ...')
-		pr.rmdir ()
+	holz.debug (f'Removing "{pr}" ...')
+	pr.rmdir ()
 
 	sys.stdout.write (f'Removed "{model_info["name"]}@{model_info["quality"]}".\n')
 

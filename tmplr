@@ -1,6 +1,6 @@
 #!env python3
 """    
-    CLI tool to manage piper voices.
+    CLI tool to generate files from templates.
 
     2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
     See license.md for details.
@@ -8,12 +8,12 @@
     https://think-biq.com
 """
 import sys
-from src.piper_whistle.cli import main as cli_main
+from src.tools.tmplr import main as tmplr_main
 
 
 if '__main__' == __name__:
     """! Local execution script shorthand."""
     # Call CLI entry function.
-    r = cli_main (sys.argv)
+    r = tmplr_main ()
     # Exit with return code.
     sys.exit (r)

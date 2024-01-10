@@ -18,7 +18,7 @@ setuptools.setup (
 	name = "piper_whistle",
 	version = version (),
 	author = "biq",
-	author_email = "sf@think-biq.com",
+	author_email = "sven.freiberg@biq.solutions",
 	description = "CLI tool to manage piper voices.",
 	long_description = long_description,
 	long_description_content_type = "text/markdown",

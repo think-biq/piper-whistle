@@ -14,15 +14,95 @@ from . import util
 from .__init__ import version
 
 
-def create_arg_parser ():
+# Build command lookup map.
+commands = {
+	'guess': cmds.run_guess,
+	'path': cmds.run_path,
+	'speak': cmds.run_speak,
+	'list': cmds.run_list,
+	'preview': cmds.run_preview,
+	'install': cmds.run_install,
+	'remove': cmds.run_remove
+}
+HELP_REQUESTED = False
+
+
+class WhistleArgsParserException (Exception):
+	
+	def __init__ (self, status, message, help_requested = False):
+		super().__init__ (message)
+		self.status = status
+		self.help_requested = help_requested
+
+	@property
+	def message (self):
+		return str (self)
+
+
+class WhistleArgsParser (argparse.ArgumentParser):
+	'''.'''
+	LOG = logging.getLogger ('whistle-args')
+
+	def __init__ (self, *args, **kwargs):
+		'''.'''
+		super ().__init__ (*args, **kwargs)
+		self._last_error_code = 0
+		self._last_error_message = None
+		self._help_requested = False
+
+	def print_help (self):
+		'''.'''
+		# Idea based on discussion at:
+		# https://stackoverflow.com/a/61039719
+		super ().print_help ()
+		raise WhistleArgsParserException (
+			self._last_error_code,
+			self._last_error_message,
+			help_requested=True
+		)
+
+	def print_help_raw (self):
+		'''.'''
+		super ().print_help ()
+
+	def error (self, message):
+		'''.'''
+		self._last_error_message = message
+		self._last_error_code = 13
+		raise WhistleArgsParserException (
+			self._last_error_code,
+			self._last_error_message
+		)
+
+	def exit (self, status=0, message=None):
+		'''.'''
+		self._last_error_code = status
+		self._last_error_message = message
+
+	def has_error (self):
+		'''.'''
+		return 0 < self._last_error_code
+
+	def last_error (self):
+		'''.'''
+		return self._last_error_code, self._last_error_message
+
+
+def create_arg_parser (prog = 'piper_whistle'):
 	"""! Build argparse command line argument parser."""
 
 	# Build top level parser object.
-	parser = argparse.ArgumentParser (
-		formatter_class=argparse.RawTextHelpFormatter
+	parser = WhistleArgsParser (prog = prog
+		, formatter_class=argparse.RawTextHelpFormatter
+		, add_help=False
 	)
 
 	# Setup global flags for verbosity level and version print.
+	parser.add_argument ('-h', '--help'
+		, action='help'
+		, help='Show help message.'
+		, default=False
+	)
 	parser.add_argument ('-d', '--debug'
 		, action='store_true'
 		, help='Activate very verbose logging.'
@@ -52,7 +132,15 @@ def create_arg_parser ():
 	subparsers = parser.add_subparsers (dest='command')
 
 	# Setup gues command and options.
-	guess_args = subparsers.add_parser ('guess')
+	guess_args = subparsers.add_parser ('guess'
+		, formatter_class=argparse.RawTextHelpFormatter
+		, add_help=False
+	)
+	guess_args.add_argument ('-h', '--help'
+		, action='help'
+		, help='Show help message.'
+		, default=False
+	)
 	guess_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
@@ -64,7 +152,9 @@ def create_arg_parser ():
 	)
 
 	# Setup path command and options.
-	selector_args = subparsers.add_parser ('path')
+	selector_args = subparsers.add_parser ('path'
+		, formatter_class=argparse.RawTextHelpFormatter
+	)
 	selector_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
@@ -76,7 +166,15 @@ def create_arg_parser ():
 	)
 
 	# Setup speak command and options.
-	speak_args = subparsers.add_parser ('speak')
+	speak_args = subparsers.add_parser ('speak'
+		, formatter_class=argparse.RawTextHelpFormatter
+		, add_help=False
+	)
+	speak_args.add_argument ('-h', '--help'
+		, action='help'
+		, help='Show help message.'
+		, default=False
+	)
 	speak_args.add_argument ('something', type=str
 		, help='Something to speak.'
 		, default=''
@@ -108,7 +206,15 @@ def create_arg_parser ():
 	)
 
 	# Setup list command and options.
-	list_args = subparsers.add_parser ('list')
+	list_args = subparsers.add_parser ('list'
+		, formatter_class=argparse.RawTextHelpFormatter
+		, add_help=False
+	)
+	list_args.add_argument ('-h', '--help'
+		, action='help'
+		, help='Show help message.'
+		, default=False
+	)
 	list_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
@@ -161,7 +267,15 @@ def create_arg_parser ():
 	)
 
 	# Setup preview command and options.
-	preview_args = subparsers.add_parser ('preview')
+	preview_args = subparsers.add_parser ('preview'
+		, formatter_class=argparse.RawTextHelpFormatter
+		, add_help=False
+	)
+	preview_args.add_argument ('-h', '--help'
+		, action='help'
+		, help='Show help message.'
+		, default=False
+	)
 	preview_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
@@ -189,7 +303,15 @@ def create_arg_parser ():
 	)
 	
 	# Setup install command and options.
-	install_args = subparsers.add_parser ('install')
+	install_args = subparsers.add_parser ('install'
+		, formatter_class=argparse.RawTextHelpFormatter
+		, add_help=False
+	)
+	install_args.add_argument ('-h', '--help'
+		, action='help'
+		, help='Show help message.'
+		, default=False
+	)
 	install_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
@@ -210,7 +332,15 @@ def create_arg_parser ():
 	)
 
 	# Setup remove command and options.
-	remove_args = subparsers.add_parser ('remove')
+	remove_args = subparsers.add_parser ('remove'
+		, formatter_class=argparse.RawTextHelpFormatter
+		, add_help=False
+	)
+	remove_args.add_argument ('-h', '--help'
+		, action='help'
+		, help='Show help message.'
+		, default=False
+	)
 	remove_args.add_argument ('-v', '--verbose'
 		, action='store_true'
 		, help='Activate verbose logging.'
@@ -224,26 +354,60 @@ def create_arg_parser ():
 	return parser
 
 
-def main ():
+def main (custom_args, force_debug = False):
 	"""! Main CLI processing function."""
+	log_level = logging.WARNING
 
 	# Setup and configure argparse parser.
+	parser_ex = None
 	parser = create_arg_parser ()
-	# Parse passed arguments.
-	args = parser.parse_args ()
+	try:
+		# Parse passed arguments.
+		args = parser.parse_args (args = custom_args[1:])
+	except Exception as ex:
+		# Setup holz just before handling exception.
+		if force_debug:
+			log_level = logging.DEBUG
+		holz.setup_default ('whistle', log_level)
+		holz.normalize ()
+		parser_ex = ex
 
-	log_level = logging.WARNING
-	if args.debug:
+	if None is parser_ex:
+		holz.debug ('Parsed arguments without exception.')
+	elif type (parser_ex) == WhistleArgsParserException:
+		if parser_ex.help_requested:
+			holz.debug ('Parser help was requested.')
+			# Since message has already been put to stdout, we can exit.
+			return 0
+
+		# Notify about exception.
+		holz.error (parser_ex.message)
+
+		# Return forwarded status code.
+		return parser_ex.status
+	else:
+		holz.fatal (f'Unexpected error: {parser_ex}')
+		return 23
+
+
+	# Determine log level for holz setup.
+	if args.debug or force_debug:
 		log_level = logging.DEBUG
 	elif args.verbose:
 		log_level = logging.INFO
+
 	# Setup default log level and initialize holz logging utility.
 	holz.setup_default ('whistle', log_level)
 	holz.activate_flush_always (True)
 	holz.normalize ()
+	holz.debug ('Holz setup done and available loggers normalized.')
 
 	if args.version:
 		print (version ())
+		return 0
+
+	if args.help:
+		parser.print_help_raw ()
 		return 0
 
 	# Fetch default paths for config and data storage.
@@ -255,6 +419,7 @@ def main ():
 		paths = db.data_paths (args.data_root)
 	else:
 		paths = db.data_paths ()
+
 	# Fetch details on where to obtain voice data from.
 	repo_info = db.remote_repo_config ()
 	
@@ -273,24 +438,13 @@ def main ():
 			f'Could not create context. ' \
 			f'Please refresh database using "{sys.argv[0]} -vR"'
 		)
-		parser.print_help ()
+		parser.print_help_raw ()
 		return 1
 
 	# Show help message if no command is provided.
 	if None is args.command:
-		parser.print_help ()
+		parser.print_help_raw ()
 		return 1
-
-	# Build command lookup map.
-	commands = {
-		'guess': cmds.run_guess,
-		'path': cmds.run_path,
-		'speak': cmds.run_speak,
-		'list': cmds.run_list,
-		'preview': cmds.run_preview,
-		'install': cmds.run_install,
-		'remove': cmds.run_remove
-	}
 
 	# Select command and run it.
 	if args.command in commands:
@@ -302,13 +456,13 @@ def main ():
 	holz.error (f'Could not find command "{args.command}".')
 
 	# Show available commands.
-	parser.print_help ()
+	parser.print_help_raw ()
 	return 1
 
 
 if __name__ == '__main__':
 	"""! CLI entry point."""
 	# Call CLI entry function.
-	r = main ()
+	r = main (sys.argv)
 	# Exit with return code.
 	sys.exit (r)
