@@ -46,6 +46,8 @@ pip-install-dev:
 pip-install-runtime:
 	python3 -m pip install -r requirements.txt
 
+pip-update-all: pip-update-pip pip-install-dev pip-install-runtime
+
 release:
 	mkdir -p "$(PROJECT_DIR)/build/release"
 	python3 -m build -s -w -o "$(PROJECT_DIR)/build/release"

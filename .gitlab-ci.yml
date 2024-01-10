@@ -50,7 +50,7 @@ release-pypi-test:
   variables:
     RELEASE_DIR: build/release
   script:
-    - make pip-update-pip pip-install-dev
+    - make pip-update-all
     - make readme-build
     - make release
     - twine upload -r testpypi --config-file "${PYPI_CONFIG_FILE}" --skip-existing ${RELEASE_DIR}/*
@@ -66,7 +66,7 @@ release-pypi-test:
 release-pypi:
   stage: release
   script:
-    - make pip-update-pip pip-install-dev
+    - make pip-update-all
     - make readme-build
     - make release
     - twine upload --config-file ${PYPI_LIVE_CONFIG_FILE} build/release/*
