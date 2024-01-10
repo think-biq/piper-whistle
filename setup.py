@@ -16,7 +16,7 @@ with open("readme.md", "r") as fh:
 
 setuptools.setup (
 	name = "piper_whistle",
-	version = version (),
+	version = version.as_string (),
 	author = "biq",
 	author_email = "sven.freiberg@biq.solutions",
 	description = "CLI tool to manage piper voices.",

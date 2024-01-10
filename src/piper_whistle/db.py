@@ -23,7 +23,6 @@ URL: https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_PT/tug%C3%A3
 import os
 import sys
 import json
-import requests
 import userpaths
 import time
 import urllib
