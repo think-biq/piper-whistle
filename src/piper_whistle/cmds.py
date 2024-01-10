@@ -22,9 +22,11 @@ import userpaths
 import time
 import urllib
 import pathlib
-from . import holz
-from . import db
-from . import util
+# Append root package to path so it can be called with absolute path.
+sys.path.append (str (pathlib.Path(__file__).resolve().parents[1]))
+from piper_whistle import holz
+from piper_whistle import db
+from piper_whistle import util
 
 
 def _run_program (params):

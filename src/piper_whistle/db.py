@@ -28,9 +28,12 @@ import time
 import urllib
 import pathlib
 import tempfile
-from . import holz
-from . import search
-from . import util
+# Append root package to path so it can be called with absolute path.
+sys.path.append (str (pathlib.Path(__file__).resolve().parents[1]))
+# ..
+from piper_whistle import holz
+from piper_whistle import util
+from piper_whistle import search
 
 
 def data_paths (appdata_root_path = userpaths.get_appdata ()):

@@ -1,9 +1,14 @@
 """Utility functions.
 """
 # 2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
+import sys
+import pathlib
 import requests
 from tqdm import tqdm
-from . import holz
+# Append root package to path so it can be called with absolute path.
+sys.path.append (str (pathlib.Path(__file__).resolve().parents[1]))
+# ..
+from piper_whistle import holz
 
 
 def float_round (x, digits = 2):

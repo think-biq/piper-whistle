@@ -5,13 +5,17 @@ CLI handling of piper-whistle commands.
 # 2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
 import os
 import sys
+import pathlib
 import argparse
 import logging
-from . import holz
-from . import db
-from . import cmds
-from . import util
-from . import version
+# Append root package to path so it can be called with absolute path.
+sys.path.append (str (pathlib.Path(__file__).resolve().parents[1]))
+# ..
+from piper_whistle import holz
+from piper_whistle import db
+from piper_whistle import cmds
+from piper_whistle import util
+from piper_whistle import version
 
 
 # Build command lookup map.
