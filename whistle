@@ -1,19 +1,9 @@
-#!env python3
-"""    
-    CLI tool to manage piper voices.
+#!/bin/bash
+# Copyright (c) blurryroots innovation qanat OÜ. All Rights Reserved.
 
-    2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
-    See license.md for details.
+main () {
+    local package_path="src.piper_whistle.cli"
+    python3 -m ${package_path} $*
+}
 
-    https://think-biq.com
-"""
-import sys
-from src.piper_whistle.cli import main as cli_main
-
-
-if '__main__' == __name__:
-    """! Local execution script shorthand."""
-    # Call CLI entry function.
-    r = cli_main (sys.argv)
-    # Exit with return code.
-    sys.exit (r)
+main $*
