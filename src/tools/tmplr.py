@@ -126,7 +126,7 @@ def run_docs_cfg (args):
 	with open (out_path.as_posix (), 'w') as f:
 		f.write (tmpl_str)
 	
-	print (f'Template read at "{out_path.as_posix ()}".')
+	print (f'Template ready at "{out_path.as_posix ()}".')
 
 	return 0
 
@@ -165,7 +165,7 @@ def run_build_readme (args):
 	with open (out_path.as_posix (), 'w') as f:
 		f.write (tmpl_str)
 	
-	print (f'Template read at "{out_path.as_posix ()}".')
+	print (f'Template ready at "{out_path.as_posix ()}".')
 
 	return 0
 

@@ -13,7 +13,7 @@ positional arguments:
   {guess,path,speak,list,preview,install,remove}
 
 options:
-  -h, --help            show this help message and exit
+  -h, --help            Show help message.
   -d, --debug           Activate very verbose logging.
   -v, --verbose         Activate verbose logging.
   -V, --version         Show version number.
@@ -33,7 +33,7 @@ positional arguments:
   language_name  A string representing a language name (or code).
 
 options:
-  -h, --help     show this help message and exit
+  -h, --help     Show help message.
   -v, --verbose  Activate verbose logging.
 ```
 
@@ -114,7 +114,7 @@ positional arguments:
   language_name  A string representing a language name (or code).
 
 options:
-  -h, --help     show this help message and exit
+  -h, --help     Show help message.
   -v, --verbose  Activate verbose logging.
 ```
 
@@ -132,7 +132,7 @@ positional arguments:
   language_name  A string representing a language name (or code).
 
 options:
-  -h, --help     show this help message and exit
+  -h, --help     Show help message.
   -v, --verbose  Activate verbose logging.
 ```
 
@@ -148,7 +148,7 @@ positional arguments:
   language_name  A string representing a language name (or code).
 
 options:
-  -h, --help     show this help message and exit
+  -h, --help     Show help message.
   -v, --verbose  Activate verbose logging.
 ```
 
@@ -167,7 +167,7 @@ positional arguments:
   language_name  A string representing a language name (or code).
 
 options:
-  -h, --help     show this help message and exit
+  -h, --help     Show help message.
   -v, --verbose  Activate verbose logging.
 ```
 

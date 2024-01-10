@@ -50,7 +50,9 @@ pip-update-all: pip-update-pip pip-install-dev pip-install-runtime
 
 release:
 	mkdir -p "$(PROJECT_DIR)/build/release"
-	python3 -m build -s -w -o "$(PROJECT_DIR)/build/release"
+	# https://github.com/pypa/setuptools/issues/3000
+	# Add -n to allow build to use current package env
+	PYTHONPATH=$(PWD) python3 -m build -s -n -w -o "$(PROJECT_DIR)/build/release"
 
 pypi-test:
 	twine upload -r testpypi "$(PROJECT_DIR)/build/release"/*
