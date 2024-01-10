@@ -14,14 +14,7 @@ from piper_whistle import db
 from piper_whistle import holz
 from piper_whistle import search
 from piper_whistle import util
-
-
-def version ():
-	return "1.6.83"
+from piper_whistle import version
 
 
 __all__ = ['cli', 'cmds', 'db', 'search', 'version']
-
-
-if '__main__' == __name__:
-	print (version ())

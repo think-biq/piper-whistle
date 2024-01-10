@@ -11,7 +11,7 @@ from . import holz
 from . import db
 from . import cmds
 from . import util
-from .__init__ import version
+from . import version
 
 
 # Build command lookup map.
@@ -403,7 +403,7 @@ def main (custom_args, force_debug = False):
 	holz.debug ('Holz setup done and available loggers normalized.')
 
 	if args.version:
-		print (version ())
+		print (version.as_string ())
 		return 0
 
 	if args.help:

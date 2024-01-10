@@ -7,7 +7,7 @@ SHELL := /bin/bash
 
 
 #	$(shell python3 "$(PROJECT_DIR)/build-config.py" \
-#		$(shell python3 "$(PROJECT_DIR)/../src/piper_whistle/__init__.py") \
+#		$(shell python3 -m src.piper_whistle.version) \
 #		"$(PROJECT_DIR)/docs.cfg"\
 #		"$(PROJECT_DIR)/docs.cfg.live")
 

@@ -28,7 +28,7 @@ test-release-pypi-test:
     # Need to setup test as well as live repository, to properly resolve
     # all piper-whistle dependencies. Force the staged version, as to skip
     # the live version, since live repo seems to have precedence.
-    - python3 -m pip install --trusted-host test.pypi.org --trusted-host test-files.pythonhosted.org --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ piper_whistle==$(python3 src/piper_whistle/__init__.py)
+    - python3 -m pip install --trusted-host test.pypi.org --trusted-host test-files.pythonhosted.org --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ piper_whistle==$(python3 -m src.piper_whistle.version)
     - piper_whistle -h
     - echo "Setting up search index ..."
     - piper_whistle -vR
