@@ -34,7 +34,7 @@ setuptools.setup (
 	python_requires = '>=3.8',
 	entry_points = {
 		'console_scripts': [
-			'piper_whistle = piper_whistle.cli:main'
+			'piper_whistle = piper_whistle.cli:main_sys'
 		],
 	},
 	install_requires = [

@@ -464,9 +464,14 @@ def main (custom_args, force_debug = False):
 	return 1
 
 
-if __name__ == '__main__':
-	"""! CLI entry point."""
+def main_sys ():
+	"""! CLI entry point with sys.argv as default parameters."""
 	# Call CLI entry function.
 	r = main (sys.argv)
 	# Exit with return code.
 	sys.exit (r)
+
+
+if __name__ == '__main__':
+	"""! CLI entry point."""
+	main_sys ()
