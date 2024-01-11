@@ -147,9 +147,13 @@ class CliCommandTests (unittest.TestCase):
 		out_str = cli_output.getvalue ().strip ()
 		return out_str
 
+	def _run_whistle_main_with (self, arg_list_name):
+		out_str = self._run_whistle_main (self.test_arguments[arg_list_name])
+		return out_str
+
 	def test_a0_create_index (self):
 		# Ask whistle to downlnoad and rebuild voice database.
-		out_str = self._run_whistle_main (self.test_arguments['create-index'])
+		out_str = self._run_whistle_main_with ('create-index')
 		self.assertTrue (check_if_timestamp (out_str))
 
 		whistle_paths = whistle_db.data_paths (self.data_root_path.as_posix ())
@@ -157,25 +161,25 @@ class CliCommandTests (unittest.TestCase):
 
 	def test_b0_list_languages (self):
 		# Ask whistle to list all available languages.
-		out_str = self._run_whistle_main (self.test_arguments['list-languages'])
+		out_str = self._run_whistle_main_with ('list-languages')
 
 		self.assertEqual (out_str, expected_list_languages.strip ())
 
 	def test_c0_list_voice (self):
 		# Ask whistle to list the first voice for the german language.
-		out_str = self._run_whistle_main (self.test_arguments['list-voice'])
+		out_str = self._run_whistle_main_with ('list-voice')
 
 		self.assertEqual (out_str, expected_list_voice.strip ())
 
 	def test_d0_list_voice_legal (self):
 		# Ask whistle to list the first voice for the german language and the
 		# available legal information.
-		out_str = self._run_whistle_main (self.test_arguments['list-voice-legal'])
+		out_str = self._run_whistle_main_with ('list-voice-legal')
 		self.assertEqual (out_str, expected_list_voice_plus_legal.strip ())
 
 	def test_e0_install_voice (self):
 		# Ask whistle to install the first german voice at index 0.
-		out_str = self._run_whistle_main (self.test_arguments['install-voice'])
+		out_str = self._run_whistle_main_with ('install-voice')
 		out_parts = out_str.split ('\t')
 
 		self.assertEqual (out_parts[0], expected_install_voice[0])
@@ -190,17 +194,17 @@ class CliCommandTests (unittest.TestCase):
 
 	def test_f0_list_installed_voices (self):
 		# Ask whistle to list all installed voices.
-		out_str = self._run_whistle_main (self.test_arguments['list-installed-voices'])
+		out_str = self._run_whistle_main_with ('list-installed-voices')
 		self.assertEqual (out_str, expected_list_installed_voices.strip ())
 
 	def test_g0_show_voice_path (self):
 		# Ask whistle to show the path to the voice with name 'de_DE-eva_k-x_low'.
-		out_str = self._run_whistle_main (self.test_arguments['show-path'])
+		out_str = self._run_whistle_main_with ('show-path')
 		self.assertTrue (out_str.endswith (expected_show_path.strip ()))
 
 	def test_h0_remove_voice (self):
 		# Ask whistle to remove voice named 'de_DE-eva_k-x_low'.
-		out_str = self._run_whistle_main (self.test_arguments['remove-voice'])
+		out_str = self._run_whistle_main_with ('remove-voice')
 		self.assertEqual (out_str, expected_remove_voice.strip ())
 
 

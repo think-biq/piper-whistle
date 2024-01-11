@@ -20,6 +20,7 @@ from piper_whistle import version
 
 # Build command lookup map.
 commands = {
+	
 	'guess': cmds.run_guess,
 	'path': cmds.run_path,
 	'speak': cmds.run_speak,
@@ -481,8 +482,15 @@ def main (custom_args, force_debug = False):
 	if args.refresh or 'refresh' == args.command:
 		if 'refresh' == args.command:
 			repo_info['repo-id'] = args.repository
+		else:
+			holz.warn (
+				f'-R will be phased out within the next couple releases. '
+				f'Please use the "refresh" command.'
+			)
+
 		holz.info (f'Fetching and rebuilding database from "{repo_info["repo-id"]}" ...')
 		context = db.index_download_and_rebuild (paths, repo_info)
+
 		holz.debug (f"Noting last update time to '{context['paths']['last-updated']}'.")
 		with open (context['paths']['last-updated'], 'r') as f:
 			sys.stdout.write (f.read ())
