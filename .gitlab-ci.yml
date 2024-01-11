@@ -35,6 +35,9 @@ build-wheel:
       allow_failure: true
     - if: $CI_COMMIT_REF_NAME == "staging"
       allow_failure: true
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
   script:
     - make pip-update-all
     - make readme-build
