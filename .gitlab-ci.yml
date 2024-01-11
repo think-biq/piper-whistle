@@ -89,20 +89,26 @@ release-pypi:
     - make release
     - twine upload --config-file ${PYPI_LIVE_CONFIG_FILE} build/release/*
     - apt-get update -y
-    - apt-get install -yqqf curl jq --fix-missing
+    - apt-get install -yqqf coreutils curl jq --fix-missing
     - export GIT_COMMIT_TAG=$(git tag --points-at HEAD)
     - echo "GIT_COMMIT_TAG=${GIT_COMMIT_TAG}" > pypi.env
     - export WHEEL_FILE_NAME="piper_whistle-${GIT_COMMIT_TAG}-py3-none-any.whl"
     - echo "WHEEL_FILE_NAME=${WHEEL_FILE_NAME}" >> pypi.env
     - export WHEEL_FILE_URL="https://pypi.debian.net/piper-whistle/${WHEEL_FILE_NAME}"
     - echo "WHEEL_FILE_URL=${WHEEL_FILE_URL}" >> pypi.env
+    - echo "pypi.env:"
+    - cat pypi.env
     - echo "Sleeping for ${DELAY_IN_SECONDS} seconds ..."
     - sleep ${DELAY_IN_SECONDS}
     - echo "Checking if download is valid ..."
     - mkdir -p download
     - curl "${WHEEL_FILE_URL}" > "download/${WHEEL_FILE_NAME}"
-    - export HASH_REMOTE=$(python3 -c "import hashlib; f = open ('download/${WHEEL_FILE_NAME}', 'rb'); h = hashlib.sha1 (f.read ()); print (h.hexdigest ()); f.close ()")
-    - export HASH_LOCAL=$(python3 -c "import hashlib; f = open ('build/release/${WHEEL_FILE_NAME}', 'rb'); h = hashlib.sha1 (f.read ()); print (h.hexdigest ()); f.close ()")
+    - ls -lav "download/${WHEEL_FILE_NAME}"
+    - export HASH_REMOTE=$(sha1sum "download/${WHEEL_FILE_NAME}"
+    - echo $HASH_REMOTE
+    - ls -lav "build/release/${WHEEL_FILE_NAME}"
+    - export HASH_LOCAL=$(sha1sum "build/release/${WHEEL_FILE_NAME}")
+    - echo $HASH_LOCAL
     - '[ "${HASH_REMOTE}" = "${HASH_LOCAL}" ] && echo "File hashes check out." || exit 13'
   rules:
     # This ensures that only pushes to the release branch trigger sync.
