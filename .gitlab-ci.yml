@@ -81,6 +81,8 @@ delay-before-checking-pypi-test:
 
 release-pypi:
   stage: release
+  variables:
+    DELAY_IN_SECONDS: 7
   script:
     - make pip-update-all
     - make readme-build
