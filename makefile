@@ -11,6 +11,10 @@ SHELL := /bin/bash
 #		"$(PROJECT_DIR)/docs.cfg"\
 #		"$(PROJECT_DIR)/docs.cfg.live")
 
+audit:
+	pip-audit --desc
+	pip-audit --fix --dry-run
+
 readme-build:
 	python3 tmplr build-readme \
 		"$(PROJECT_DIR)/etc/readme.md.tmpl" \
