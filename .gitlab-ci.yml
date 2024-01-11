@@ -1,4 +1,4 @@
-# The Docker image that will be used to build your app
+# Copyright (c) 2023-∞ blurryroots innovation qanat OÜ
 image: thinkbiq/ue-plugin-staging:latest
 
 stages:
@@ -99,7 +99,7 @@ release-pypi:
     - echo "pypi.env:"
     - cat pypi.env
     - echo "Generating release page for $GIT_COMMIT_TAG ..."
-    - git tag -n 23 -l "${GIT_COMMIT_TAG}" | awk {'first = $1; $1=""; print $0'} | sed 's/^ //g' > release-notes.md
+    - etc/./query-tag-message.sh ${GIT_COMMIT_TAG} > release-notes.md
     - echo "release-notes.md:"
     - cat release-notes.md
     - echo "Sleeping for ${DELAY_IN_SECONDS} seconds ..."
