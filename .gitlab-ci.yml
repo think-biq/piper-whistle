@@ -111,7 +111,7 @@ create-gitlab-repo-release:
     - if: $CI_COMMIT_REF_NAME == "release" && $CI_COMMIT_TAG =~ "^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$"
       allow_failure: true
   script:
-    - apt-get install -y curl
+    - apt-get install -yqqf curl --fix-missing
     - echo "Checking if download is valid ..."
     - mkdir -p download
     - curl "${WHEEL_FILE_URL}" > "download/${WHEEL_FILE_NAME}"
