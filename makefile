@@ -3,7 +3,7 @@
 
 FILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_DIR := $(realpath -s $(shell dirname $(FILE_PATH)))
-SHELL := /bin/bash 
+SHELL := /bin/bash
 
 
 #	$(shell python3 "$(PROJECT_DIR)/build-config.py" \
