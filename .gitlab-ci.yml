@@ -115,6 +115,7 @@ create-gitlab-repo-release:
   script:
     - apk update
     - apk add curl
+    - apk add jq
     - echo "Sleeping for ${DELAY_IN_SECONDS} seconds ..."
     - sleep ${DELAY_IN_SECONDS}
     - echo "Checking if download is valid ..."
