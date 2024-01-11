@@ -59,3 +59,6 @@ pypi-test:
 
 pypi:
 	twine upload "$(PROJECT_DIR)/build/release"/*
+
+version:
+	@python3 -m src.piper_whistle.version
