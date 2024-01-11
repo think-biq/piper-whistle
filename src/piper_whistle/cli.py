@@ -32,9 +32,16 @@ HELP_REQUESTED = False
 
 
 class WhistleArgsParserException (Exception):
+	'''.'''
+	LOG = logging.getLogger ('whistle-args-exception')
 	
 	def __init__ (self, status, message, help_requested = False):
-		super().__init__ (message)
+		self.LOG.debug (
+			f'Creating new (status: {status}), '
+			f'message: "{message}", '
+			f'help_requested: {help_requested}'
+		)
+		super ().__init__ (message)
 		self.status = status
 		self.help_requested = help_requested
 
@@ -49,6 +56,10 @@ class WhistleArgsParser (argparse.ArgumentParser):
 
 	def __init__ (self, *args, **kwargs):
 		'''.'''
+		n = kwargs["prog"] if "prog" in kwargs else "UNNAMED"
+		self.LOG.debug (
+			f'Setting up "{n}" arg parser.'
+		)
 		super ().__init__ (*args, **kwargs)
 		self._last_error_code = 0
 		self._last_error_message = None
@@ -56,9 +67,16 @@ class WhistleArgsParser (argparse.ArgumentParser):
 
 	def print_help (self):
 		'''.'''
+		self._help_requested = True
+		self.LOG.debug ('Printing help, then raising WhistleArgsParserException.')
 		# Idea based on discussion at:
 		# https://stackoverflow.com/a/61039719
+		# First print auto-generated help text, then instead of exiting,
+		# raise whistle exception so main function can react. It smells like
+		# 'exception as flow control' anti-pattern'ish, yet it apperas to me
+		# as a reasonable trait-off for this scenario.
 		super ().print_help ()
+		self.LOG.debug ('Here we go ...')
 		raise WhistleArgsParserException (
 			self._last_error_code,
 			self._last_error_message,
@@ -135,6 +153,29 @@ def create_arg_parser (prog = 'piper_whistle'):
 	# Split object for subparsers.
 	subparsers = parser.add_subparsers (dest='command')
 
+	# Setup refresh command and options.
+	refresh_args = subparsers.add_parser ('refresh'
+		, formatter_class=argparse.RawTextHelpFormatter
+		, add_help=False
+	)
+	refresh_args.add_argument ('-h', '--help'
+		, action='help'
+		, help='Show help message.'
+		, default=False
+	)
+	refresh_args.add_argument ('-v', '--verbose'
+		, action='store_true'
+		, help='Activate verbose logging.'
+		, default=False
+	)
+	refresh_args.add_argument ('-R', '--repository'
+		, type=str
+		, help=\
+			'Configures the huggingface repository. Will be used to build index,'
+			' and download all data (e.g. models) from.'
+		, default='rhasspy/piper-voices'
+	)
+
 	# Setup gues command and options.
 	guess_args = subparsers.add_parser ('guess'
 		, formatter_class=argparse.RawTextHelpFormatter
@@ -200,7 +241,9 @@ def create_arg_parser (prog = 'piper_whistle'):
 	)	
 	speak_args.add_argument ('-o', '--output'
 		, type=str
-		, help='Instead of streaming to audio channel, specifies a path to wav file where speech will be store in.'
+		, help=\
+			'Instead of streaming to audio channel, specifies a path to wav'
+			' file where speech will be store in.'
 		, default=None
 	)
 	speak_args.add_argument ('-v', '--verbose'
@@ -374,11 +417,17 @@ def main (custom_args, force_debug = False):
 			log_level = logging.DEBUG
 		holz.setup_default ('whistle', log_level)
 		holz.normalize ()
+		# Remember exception.
 		parser_ex = ex
 
 	if None is parser_ex:
 		holz.debug ('Parsed arguments without exception.')
 	elif type (parser_ex) == WhistleArgsParserException:
+		# So here we are, exception as flow control. It's just very convenient
+		# to be able to identify help requested, since otherwise it seems
+		# I'd have to equip every sub-arg-parser with a reference to the main
+		# parser and then notify when help was requested in any sub-command.
+		# So it comes down to lazyness?! Or economy? Anyway, it seems reasonable.
 		if parser_ex.help_requested:
 			holz.debug ('Parser help was requested.')
 			# Since message has already been put to stdout, we can exit.
@@ -411,6 +460,7 @@ def main (custom_args, force_debug = False):
 		return 0
 
 	if args.help:
+		# 'Print only function', since overridden print_help raises an exception.
 		parser.print_help_raw ()
 		return 0
 
@@ -428,9 +478,12 @@ def main (custom_args, force_debug = False):
 	repo_info = db.remote_repo_config ()
 	
 	# Check if refresh is requestsed.
-	if args.refresh:
-		holz.info ('Fetching and rebuilding database ...')
+	if args.refresh or 'refresh' == args.command:
+		if 'refresh' == args.command:
+			repo_info['repo-id'] = args.repository
+		holz.info (f'Fetching and rebuilding database from "{repo_info["repo-id"]}" ...')
 		context = db.index_download_and_rebuild (paths, repo_info)
+		holz.debug (f"Noting last update time to '{context['paths']['last-updated']}'.")
 		with open (context['paths']['last-updated'], 'r') as f:
 			sys.stdout.write (f.read ())
 		return 0
@@ -442,11 +495,13 @@ def main (custom_args, force_debug = False):
 			f'Could not create context. ' \
 			f'Please refresh database using "{sys.argv[0]} -vR"'
 		)
+		# 'Print only function', since overridden print_help raises an exception.
 		parser.print_help_raw ()
 		return 1
 
 	# Show help message if no command is provided.
 	if None is args.command:
+		# 'Print only function', since overridden print_help raises an exception.
 		parser.print_help_raw ()
 		return 1
 
@@ -457,9 +512,10 @@ def main (custom_args, force_debug = False):
 		holz.debug (f'Finished with "{r}".')
 		return r
 
-	holz.error (f'Could not find command "{args.command}".')
+	holz.error (f'Could not find action binding for command "{args.command}".')
 
 	# Show available commands.
+	# Use 'print only function', since overridden print_help raises an exception.
 	parser.print_help_raw ()
 	return 1
 

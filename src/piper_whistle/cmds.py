@@ -7,7 +7,8 @@ path: run_path
 speak: run_speak
 list: run_list
 preview: run_preview
-install: run_instal
+install: run_install
+remove: run_remove
 ```
 Command handle function get passed whistle context and argparse arguments.
 

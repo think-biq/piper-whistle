@@ -325,12 +325,10 @@ def index_download_and_rebuild (paths = data_paths (), repo_info = remote_repo_c
 	holz.debug ('Ensuring data paths exists ...')
 
 	# Make sure data path exists.
-	with pathlib.Path (paths['data']) as p:
-		p.mkdir (parents = True, exist_ok = True)
+	pathlib.Path (paths['data']).mkdir (parents = True, exist_ok = True)
 
 	# Make sure voice data storage path exists.
-	with pathlib.Path (paths['voices']) as p:
-		p.mkdir (parents = True, exist_ok = True)
+	pathlib.Path (paths['voices']).mkdir (parents = True, exist_ok = True)
 
 	holz.info ('Fetching current index ...')
 	index = index_fetch_raw (repo_info)

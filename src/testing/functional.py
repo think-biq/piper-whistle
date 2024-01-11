@@ -121,7 +121,7 @@ class CliCommandTests (unittest.TestCase):
 		def make_cli_arg_list (*params):
 			return [app_name, '-P', data_root, *list (params)]
 		cls.test_arguments = {
-			'create-index': make_cli_arg_list ('-vR'),
+			'create-index': make_cli_arg_list ('refresh', '-v'),
 			'list-languages': make_cli_arg_list ('list', '-L'),
 			'list-voice': make_cli_arg_list ('list', '-l', 'de_DE', '-i', '0'),
 			'list-voice-legal': make_cli_arg_list ('list', '-l', 'de_DE', '-i', '0', '-g'),
