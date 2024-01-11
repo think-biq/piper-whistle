@@ -73,6 +73,7 @@ release-pypi-test:
     - job: build-wheel
       artifacts: true
   script:
+    - python3 -m pip install twine
     - twine upload -r testpypi --config-file "${PYPI_CONFIG_FILE}" --skip-existing build/release/*
   rules:
     # This ensures that only pushes to the staging / testing branch
@@ -117,6 +118,7 @@ release-pypi:
     - cat release-notes.md
     - echo "Uploading ..."
     - ls -lav build/release
+    - python3 -m pip install twine
     - twine upload --config-file ${PYPI_LIVE_CONFIG_FILE} build/release/*
   rules:
     # This ensures that only pushes to the release branch trigger sync.
