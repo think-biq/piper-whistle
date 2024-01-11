@@ -140,8 +140,8 @@ create-gitlab-repo-release:
   script:
     - echo "Release notes ready:"
     - cat release-notes.md
-    - echo "Tag name: ${GIT_COMMIT_TAG}"
-    - echo "Release name: piper-whistle ${GIT_COMMIT_TAG} wheel"
+    - echo Tag name "${GIT_COMMIT_TAG}"
+    - echo Release name "piper-whistle ${GIT_COMMIT_TAG} wheel"
   release:
     name: 'piper-whistle ${GIT_COMMIT_TAG} wheel'
     description: 'release-notes.md'
