@@ -10,7 +10,7 @@ query-version () {
 
 	pushd "${_script_dir}/.." > /dev/null
 		if ! make version; then
-			echo "Could not run version target in makefile."
+			echo "Could not run version target in makefile." > /dev/stderr
 			r=13
 		fi
 	popd > /dev/null
@@ -23,7 +23,7 @@ main () {
 	local tagname=$(mktemp)
 
 	if ! git tag --points-at HEAD > ${tagname}; then
-		echo "Git should not fail :/"
+		echo "Git should not fail :/" > /dev/stderr
 		return 13
 	fi
 
@@ -31,7 +31,12 @@ main () {
 	if (( 0 < ${#tag} )); then
 		echo $(cat ${tagname})
 	else
-		r=$(query-version)
+		if ! query-version > ${tagname}; then
+			return $?
+		fi
+
+		r=$?
+		echo $(cat ${tagname})
 	fi
 
 	return ${r}
