@@ -90,9 +90,11 @@ release-pypi:
     - twine upload --config-file ${PYPI_LIVE_CONFIG_FILE} build/release/*
     - apt-get update -y
     - apt-get install -yqqf curl jq --fix-missing
-    - export WHEEL_FILE_NAME="piper_whistle-${CI_COMMIT_TAG}-py3-none-any.whl"
+    - export GIT_COMMIT_TAG=$(git tag --points-at HEAD)
+    - echo "GIT_COMMIT_TAG=${GIT_COMMIT_TAG}" > pypi.env
+    - export WHEEL_FILE_NAME="piper_whistle-${GIT_COMMIT_TAG}-py3-none-any.whl"
+    - echo "WHEEL_FILE_NAME=${WHEEL_FILE_NAME}" >> pypi.env
     - export WHEEL_FILE_URL="https://pypi.debian.net/piper-whistle/${WHEEL_FILE_NAME}"
-    - echo "WHEEL_FILE_NAME=${WHEEL_FILE_NAME}" > pypi.env
     - echo "WHEEL_FILE_URL=${WHEEL_FILE_URL}" >> pypi.env
     - echo "Sleeping for ${DELAY_IN_SECONDS} seconds ..."
     - sleep ${DELAY_IN_SECONDS}
@@ -126,7 +128,7 @@ create-gitlab-repo-release:
     DELAY_IN_SECONDS: 7
   script:
     - echo "Generating release page for $CI_COMMIT_TAG ..."
-    - 'curl -H "PRIVATE-TOKEN: $CI_API_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/changelog?version=$CI_COMMIT_TAG" | jq -r .notes > release-notes.md'
+    - 'curl -H "PRIVATE-TOKEN: $CI_API_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/changelog?version=$GIT_COMMIT_TAG" | jq -r .notes > release-notes.md'
     - echo "Release notes ready:"
     - cat release-notes.md
   release:
