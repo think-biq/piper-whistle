@@ -104,7 +104,7 @@ release-pypi:
     - mkdir -p download
     - curl "${WHEEL_FILE_URL}" > "download/${WHEEL_FILE_NAME}"
     - ls -lav "download/${WHEEL_FILE_NAME}"
-    - export HASH_REMOTE=$(sha1sum "download/${WHEEL_FILE_NAME}"
+    - export HASH_REMOTE=$(sha1sum "download/${WHEEL_FILE_NAME}")
     - echo $HASH_REMOTE
     - ls -lav "build/release/${WHEEL_FILE_NAME}"
     - export HASH_LOCAL=$(sha1sum "build/release/${WHEEL_FILE_NAME}")
