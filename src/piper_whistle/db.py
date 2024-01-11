@@ -50,38 +50,49 @@ def data_paths (appdata_root_path = userpaths.get_appdata ()):
 	@param config_root_path Path to the directory, where applications can store configuration and data.
 	@return Returns a map with respective paths.
 	"""
-	whistle_data_path = os.path.join (appdata_root_path, 'piper-whistle')
-	whistle_voices_path = os.path.join (whistle_data_path, 'voices')
-	whistle_voice_index = os.path.join (whistle_data_path, 'index.json')
-	whistle_voice_lookup = os.path.join (whistle_data_path, 'languages.json')
-	whistle_voice_timestamp = os.path.join (whistle_data_path, 'last-updated')
+	whistle_data_path = pathlib.Path (appdata_root_path).joinpath ('piper-whistle')
 	return {
-		'data': whistle_data_path,
-		'voices': whistle_voices_path,
-		'index': whistle_voice_index,
-		'languages': whistle_voice_lookup,
-		'last-updated': whistle_voice_timestamp
+		'data': whistle_data_path.as_posix (),
+		'repo': whistle_data_path.joinpath ('repo.json').as_posix (),
+		'voices': whistle_data_path.joinpath ('voices').as_posix (),
+		'index': whistle_data_path.joinpath ('index.json').as_posix (),
+		'languages': whistle_data_path.joinpath ('languages.json').as_posix (),
+		'last-updated': whistle_data_path.joinpath ('last-updated').as_posix ()
 	}
 
 
-def remote_repo_config ():
+def remote_repo_config (paths):
 	"""! Returns information about the remote repository.
 
 	The map return comes with the following fields.
 
-	hf-root: Hugging Face root url.
+	root: Repository root url (e.g. huggingface).
 	repo-id: Repository identifier (in format "username/reponame")
 	branch: Branch name,
 	voice-index: Path to voice index file (JSON). Relative to repository root.
 
 	@return Returns a map with relevant repository information.
 	"""
-	return {
-		'hf-root': 'https://huggingface.co',
-		'repo-id': 'rhasspy/piper-voices',
-		'branch': 'main',
-		'voice-index': 'voices.json'
-	}
+	repo = None
+	repo_config_file = pathlib.Path (paths['repo'])
+	if not repo_config_file.exists ():
+		repo = {
+			'root': 'https://huggingface.co',
+			'repo-id': 'rhasspy/piper-voices',
+			'branch': 'main',
+			'voice-index': 'voices.json'
+		}
+		holz.debug (f'Writing default repo config to "{repo_config_file}" ...')
+		# Make sure data root path exists, in case repo config is the first to use it.
+		repo_config_file.parent.mkdir (parents = True, exist_ok = True)
+		with open (repo_config_file.as_posix (), 'w') as f:
+			json.dump (repo, f, indent = 4)
+
+	holz.debug (f'Loading repo config from "{repo_config_file}" ...')
+	with open (repo_config_file.as_posix (), 'r') as f:
+		repo = json.load (f)
+
+	return repo
 
 
 def remote_repo_build_branch_root (repo_info):
@@ -92,7 +103,7 @@ def remote_repo_build_branch_root (repo_info):
 	@param repo_info Remote repo information map. Can be obtained via @ref "remote_repo_config ()".
 	@return Returns a list of file info maps with keys {path,size} or None on error.
 	"""
-	repo_root = f"{repo_info['hf-root']}/{repo_info['repo-id']}"
+	repo_root = f"{repo_info['root']}/{repo_info['repo-id']}"
 	branch_root = f"{repo_root}/resolve/{repo_info['branch']}"
 
 	return branch_root
@@ -258,10 +269,6 @@ def index_fetch_raw (repo_info):
 	"""
 	url = remote_repo_build_index_url (repo_info)
 
-	temp = tempfile.NamedTemporaryFile ()
-	temp_path = temp.name
-	temp.close ()
-
 	raw_text = _fetch_url_raw (url)
 	if raw_text:
 		return json.loads (raw_text)
@@ -310,7 +317,7 @@ def _parse_model_card (card_text):
 	return entry
 
 
-def index_download_and_rebuild (paths = data_paths (), repo_info = remote_repo_config ()):
+def index_download_and_rebuild (paths, repo_info):
 	"""! Fetch latest voice index and build lookup database, then recreates context.
 
 	Using the info on data paths and remote repository, it fetches the latest
@@ -424,7 +431,7 @@ def _context_is_valid (context):
 		and repo_ok
 
 
-def context_create (paths = data_paths (), repo_info = remote_repo_config ()):
+def context_create (paths, repo_info):
 	"""! Creates context map object.
 
 	Loads and parses whistle JSON databases (raw index and language lookup).

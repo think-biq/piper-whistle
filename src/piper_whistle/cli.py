@@ -20,7 +20,7 @@ from piper_whistle import version
 
 # Build command lookup map.
 commands = {
-	
+	'refresh': cmds.run_refresh,
 	'guess': cmds.run_guess,
 	'path': cmds.run_path,
 	'speak': cmds.run_speak,
@@ -476,39 +476,32 @@ def main (custom_args, force_debug = False):
 		paths = db.data_paths ()
 
 	# Fetch details on where to obtain voice data from.
-	repo_info = db.remote_repo_config ()
-	
-	# Check if refresh is requestsed.
-	if args.refresh or 'refresh' == args.command:
-		if 'refresh' == args.command:
-			repo_info['repo-id'] = args.repository
-		else:
-			holz.warn (
-				f'-R will be phased out within the next couple releases. '
-				f'Please use the "refresh" command.'
-			)
-
-		holz.info (f'Fetching and rebuilding database from "{repo_info["repo-id"]}" ...')
-		context = db.index_download_and_rebuild (paths, repo_info)
-
-		holz.debug (f"Noting last update time to '{context['paths']['last-updated']}'.")
-		with open (context['paths']['last-updated'], 'r') as f:
-			sys.stdout.write (f.read ())
-		return 0
+	repo_info = db.remote_repo_config (paths)
 
 	# Trying to create new context object. Might fail if database is missing / corrupt.
 	context = db.context_create (paths, repo_info)
 	if not context:
-		holz.error (
-			f'Could not create context. ' \
-			f'Please refresh database using "{sys.argv[0]} -vR"'
-		)
-		# 'Print only function', since overridden print_help raises an exception.
-		parser.print_help_raw ()
-		return 1
+		# Check if refresh is requestsed.
+		if args.refresh or 'refresh' == args.command:
+			holz.debug ('Refresh requested. Manually constructing context ...')
+			context = {
+				'paths': paths,
+				'db': None,
+				'repo': repo_info
+			}
+		# Otherwise cya.
+		else:
+			holz.error (
+				f'Could not create context. ' \
+				f'Please refresh database using "{sys.argv[0]} refresh"'
+			)
+			# 'Print only function', since overridden print_help raises an exception.
+			parser.print_help_raw ()
+			return 1
 
 	# Show help message if no command is provided.
 	if None is args.command:
+		holz.debug ('No command specified.')
 		# 'Print only function', since overridden print_help raises an exception.
 		parser.print_help_raw ()
 		return 1

@@ -66,6 +66,33 @@ def _parse_voice_selector (selector):
 	return name, quality, speaker
 
 
+def run_refresh (context, args):
+	"""! Run command 'refresh'
+	@param context Context information and whistle database.
+	@param args Processed arguments (prepared by argparse).
+	@return Returns 0 on success, otherwise > 0.
+	"""
+	if 'refresh' == args.command:
+		context['repo']['repo-id'] = args.repository
+	else:
+		holz.warn (
+			f'-R will be phased out within the next couple releases. '
+			f'Please use the "refresh" command.'
+		)
+
+	holz.info (f'Fetching and rebuilding database from "{context["repo"]["repo-id"]}" ...')
+	context = db.index_download_and_rebuild (context['paths'], context['repo'])
+	if not context:
+		holz.info (f'Could not rebuild index.')
+		return 13
+
+	holz.debug (f"Noting last update time to '{context['paths']['last-updated']}'.")
+	with open (context['paths']['last-updated'], 'r') as f:
+		sys.stdout.write (f.read ())
+
+	return 0
+
+
 def run_guess (context, args):
 	"""! Run command 'guess'
 	@param context Context information and whistle database.
