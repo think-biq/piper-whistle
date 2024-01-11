@@ -7,10 +7,10 @@ There is also [a quick guide](https://hackernoon.com/how-to-set-up-piper-speech-
 
 ```bash
 usage: piper_whistle [-h] [-d] [-v] [-V] [-P DATA_ROOT] [-R]
-                     {guess,path,speak,list,preview,install,remove} ...
+                     {refresh,guess,path,speak,list,preview,install,remove} ...
 
 positional arguments:
-  {guess,path,speak,list,preview,install,remove}
+  {refresh,guess,path,speak,list,preview,install,remove}
 
 options:
   -h, --help            Show help message.

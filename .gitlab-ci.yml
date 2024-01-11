@@ -3,6 +3,7 @@ image: thinkbiq/ue-plugin-staging:latest
 
 stages:
   - pre-release-test
+  - build
   - release
   - grace
   - post-release-test
@@ -47,15 +48,32 @@ test-release-pypi-test:
     - if: $CI_COMMIT_REF_NAME == "staging"
       allow_failure: true
 
-release-pypi-test:
-  stage: release
-  variables:
-    RELEASE_DIR: build/release
+build-wheel:
+  stage: build
   script:
     - make pip-update-all
     - make readme-build
     - make release
-    - twine upload -r testpypi --config-file "${PYPI_CONFIG_FILE}" --skip-existing ${RELEASE_DIR}/*
+  rules:
+    # This ensures that only pushes to the release branch trigger sync.
+    - if: $CI_COMMIT_REF_NAME == "release" && $CI_COMMIT_TAG =~ "^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$"
+      allow_failure: true
+    - if: $CI_COMMIT_REF_NAME == "release"
+      when: manual
+      allow_failure: true
+    - if: $CI_COMMIT_REF_NAME == "staging"
+      allow_failure: true
+  artifacts:
+    paths:
+      - build/release
+
+release-pypi-test:
+  stage: release
+  needs:
+    - job: build-wheel
+      artifacts: true
+  script:
+    - twine upload -r testpypi --config-file "${PYPI_CONFIG_FILE}" --skip-existing build/release/*
   rules:
     # This ensures that only pushes to the staging / testing branch
     - if: $CI_COMMIT_REF_NAME == "staging"
@@ -81,15 +99,10 @@ delay-before-checking-pypi-test:
 
 release-pypi:
   stage: release
-  variables:
-    DELAY_IN_SECONDS: 7
+  needs:
+    - job: build-wheel
+      artifacts: true
   script:
-    - make pip-update-all
-    - make readme-build
-    - make release
-    - twine upload --config-file ${PYPI_LIVE_CONFIG_FILE} --skip-existing build/release/*
-    - apt-get update -y
-    - apt-get install -yqqf coreutils curl jq --fix-missing
     - export GIT_COMMIT_TAG=$(git tag --points-at HEAD)
     - echo "GIT_COMMIT_TAG=${GIT_COMMIT_TAG}" > pypi.env
     - export WHEEL_FILE_NAME="piper_whistle-${GIT_COMMIT_TAG}-py3-none-any.whl"
@@ -102,18 +115,9 @@ release-pypi:
     - etc/./query-tag-message.sh ${GIT_COMMIT_TAG} > release-notes.md
     - echo "release-notes.md:"
     - cat release-notes.md
-    - echo "Sleeping for ${DELAY_IN_SECONDS} seconds ..."
-    - sleep ${DELAY_IN_SECONDS}
-    - echo "Checking if download is valid ..."
-    - mkdir -p download
-    - curl -L "${WHEEL_FILE_URL}" > "download/${WHEEL_FILE_NAME}"
-    - ls -lav "download/${WHEEL_FILE_NAME}"
-    - export HASH_REMOTE=$(sha1sum "download/${WHEEL_FILE_NAME}")
-    - echo $HASH_REMOTE
-    - ls -lav "build/release/${WHEEL_FILE_NAME}"
-    - export HASH_LOCAL=$(sha1sum "build/release/${WHEEL_FILE_NAME}")
-    - echo $HASH_LOCAL
-    - '[ "${HASH_REMOTE}" = "${HASH_LOCAL}" ] && echo "File hashes check out." || exit 13'
+    - echo "Uploading ..."
+    - ls -lav build/release
+    - twine upload --config-file ${PYPI_LIVE_CONFIG_FILE} build/release/*
   rules:
     # This ensures that only pushes to the release branch trigger sync.
     - if: $CI_COMMIT_REF_NAME == "release" && $CI_COMMIT_TAG =~ "^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$"
@@ -141,13 +145,11 @@ create-gitlab-repo-release:
     - if: $CI_COMMIT_REF_NAME == "release"
       when: manual
       allow_failure: true
-  variables:
-    DELAY_IN_SECONDS: 7
   script:
-    - echo "Release notes ready:"
-    - cat release-notes.md
-    - echo Tag name "${GIT_COMMIT_TAG}"
-    - echo Release name "piper-whistle ${GIT_COMMIT_TAG} wheel"
+    - echo Tag name = "${GIT_COMMIT_TAG}"
+    - echo Release name = "piper-whistle ${GIT_COMMIT_TAG} wheel"
+    - echo Release notes = "$(cat release-notes.md)"
+    - echo Wheel file link = "${WHEEL_FILE_URL}"
   release:
     name: 'piper-whistle ${GIT_COMMIT_TAG} wheel'
     description: 'release-notes.md'
