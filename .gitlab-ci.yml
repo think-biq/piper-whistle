@@ -54,6 +54,14 @@ build-wheel:
     - make pip-update-all
     - make readme-build
     - make release
+    - export VERSION_TAG=$(etc/./query-tag-most-relevant-version.sh)
+    - echo "VERSION_TAG=${VERSION_TAG}" > pypi.env
+    - export WHEEL_FILE_NAME="piper_whistle-${VERSION_TAG}-py3-none-any.whl"
+    - echo "WHEEL_FILE_NAME=${WHEEL_FILE_NAME}" >> pypi.env
+    - export WHEEL_FILE_URL="https://pypi.debian.net/piper-whistle/${WHEEL_FILE_NAME}"
+    - echo "WHEEL_FILE_URL=${WHEEL_FILE_URL}" >> pypi.env
+    - echo "pypi.env:"
+    - cat pypi.env
   rules:
     # This ensures that only pushes to the release branch trigger sync.
     - if: $CI_COMMIT_REF_NAME == "release" && $CI_COMMIT_TAG =~ "^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$"
@@ -66,6 +74,8 @@ build-wheel:
   artifacts:
     paths:
       - build/release
+    reports:
+      dotenv: pypi.env
 
 release-pypi-test:
   stage: release
@@ -104,16 +114,8 @@ release-pypi:
     - job: build-wheel
       artifacts: true
   script:
-    - export GIT_COMMIT_TAG=$(git tag --points-at HEAD)
-    - echo "GIT_COMMIT_TAG=${GIT_COMMIT_TAG}" > pypi.env
-    - export WHEEL_FILE_NAME="piper_whistle-${GIT_COMMIT_TAG}-py3-none-any.whl"
-    - echo "WHEEL_FILE_NAME=${WHEEL_FILE_NAME}" >> pypi.env
-    - export WHEEL_FILE_URL="https://pypi.debian.net/piper-whistle/${WHEEL_FILE_NAME}"
-    - echo "WHEEL_FILE_URL=${WHEEL_FILE_URL}" >> pypi.env
-    - echo "pypi.env:"
-    - cat pypi.env
-    - echo "Generating release page for $GIT_COMMIT_TAG ..."
-    - etc/./query-tag-message.sh ${GIT_COMMIT_TAG} > release-notes.md
+    - echo "Generating release page for ${VERSION_TAG} ..."
+    - if ! etc/./query-tag-message.sh ${VERSION_TAG} > release-notes.md; then echo "Could not query tag ${VERSION_TAG}."; exit 13; fi
     - echo "release-notes.md:"
     - cat release-notes.md
     - echo "Uploading ..."
@@ -131,11 +133,9 @@ release-pypi:
     paths:
       - release-notes.md
       - build/release
-    reports:
-      dotenv: pypi.env
 
-create-gitlab-repo-release:
-  stage: finalize
+release-gitlab:
+  stage: release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   needs:
     - job: release-pypi
@@ -148,14 +148,14 @@ create-gitlab-repo-release:
       when: manual
       allow_failure: true
   script:
-    - echo Tag name = "${GIT_COMMIT_TAG}"
-    - echo Release name = "piper-whistle ${GIT_COMMIT_TAG} wheel"
+    - echo Tag name = "${VERSION_TAG}"
+    - echo Release name = "piper-whistle ${VERSION_TAG} wheel"
     - echo Release notes = "$(cat release-notes.md)"
     - echo Wheel file link = "${WHEEL_FILE_URL}"
   release:
-    name: 'piper-whistle ${GIT_COMMIT_TAG} wheel'
+    name: 'piper-whistle ${VERSION_TAG} wheel'
     description: 'release-notes.md'
-    tag_name: '${GIT_COMMIT_TAG}'
+    tag_name: '${VERSION_TAG}'
     ref: '$CI_COMMIT_SHA'
     assets:
       links:

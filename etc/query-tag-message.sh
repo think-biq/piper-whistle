@@ -4,6 +4,11 @@
 
 main () {
 	local tagname="$1"
+	if ! git rev-list "${tagname}" 2> /dev/null > /dev/null; then
+		echo Tag "${tagname}" not found.
+		return 13
+	fi
+
 	local tagmsg=$(git tag -n33 -l ${tagname} \
 		| awk {'first = $1; $1=""; print $0'} \
 		| sed 's/^ //g')
