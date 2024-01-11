@@ -106,7 +106,7 @@ release-pypi:
     - sleep ${DELAY_IN_SECONDS}
     - echo "Checking if download is valid ..."
     - mkdir -p download
-    - curl "${WHEEL_FILE_URL}" > "download/${WHEEL_FILE_NAME}"
+    - curl -L "${WHEEL_FILE_URL}" > "download/${WHEEL_FILE_NAME}"
     - ls -lav "download/${WHEEL_FILE_NAME}"
     - export HASH_REMOTE=$(sha1sum "download/${WHEEL_FILE_NAME}")
     - echo $HASH_REMOTE
