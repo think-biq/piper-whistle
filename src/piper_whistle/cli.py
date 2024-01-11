@@ -501,6 +501,10 @@ def main (custom_args, force_debug = False):
 
 	# Show help message if no command is provided.
 	if None is args.command:
+		if args.refresh:
+			#TODO: Deprecate -R in next major update.
+			r = commands['refresh'] (context, args)
+			return r
 		holz.debug ('No command specified.')
 		# 'Print only function', since overridden print_help raises an exception.
 		parser.print_help_raw ()
