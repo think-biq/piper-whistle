@@ -98,6 +98,10 @@ release-pypi:
     - echo "WHEEL_FILE_URL=${WHEEL_FILE_URL}" >> pypi.env
     - echo "pypi.env:"
     - cat pypi.env
+    - echo "Generating release page for $GIT_COMMIT_TAG ..."
+    - git tag -n 23 -l "${GIT_COMMIT_TAG}" | awk {'first = $1; $1=""; print $0'} | sed 's/^ //g' > release-notes.md
+    - echo "release-notes.md:"
+    - cat release-notes.md
     - echo "Sleeping for ${DELAY_IN_SECONDS} seconds ..."
     - sleep ${DELAY_IN_SECONDS}
     - echo "Checking if download is valid ..."
@@ -116,6 +120,7 @@ release-pypi:
       allow_failure: true
   artifacts:
     paths:
+      - release-notes.md
       - build/release
     reports:
       dotenv: pypi.env
@@ -133,19 +138,19 @@ create-gitlab-repo-release:
   variables:
     DELAY_IN_SECONDS: 7
   script:
-    - echo "Generating release page for $CI_COMMIT_TAG ..."
-    - 'curl -H "PRIVATE-TOKEN: $CI_API_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/changelog?version=$GIT_COMMIT_TAG" | jq -r .notes > release-notes.md'
     - echo "Release notes ready:"
     - cat release-notes.md
+    - echo "Tag name: ${GIT_COMMIT_TAG}"
+    - echo "Release name: piper-whistle ${GIT_COMMIT_TAG} wheel"
   release:
-    name: 'piper-whistle $CI_COMMIT_TAG wheel'
+    name: 'piper-whistle ${GIT_COMMIT_TAG} wheel'
     description: 'release-notes.md'
-    tag_name: '$CI_COMMIT_TAG'
+    tag_name: '${GIT_COMMIT_TAG}'
     ref: '$CI_COMMIT_SHA'
     assets:
       links:
         - name: '${WHEEL_FILE_NAME}'
-          url: 'https://pypi.debian.net/piper-whistle/${WHEEL_FILE_NAME}'
+          url: '${WHEEL_FILE_URL}'
 
 pages:
   stage: finalize
