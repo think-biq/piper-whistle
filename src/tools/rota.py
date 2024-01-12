@@ -88,6 +88,18 @@ def create_arg_parser ():
 		, default=None
 	)
 
+	# Setup gues command and options.
+	fotunae_args = subparsers.add_parser ('bhavacakra')
+	fotunae_args.add_argument ('-v', '--verbose'
+		, action='store_true'
+		, help='Activate verbose logging.'
+		, default=False
+	)
+	fotunae_args.add_argument ('script_path', type=str
+		, help='Name of the package for which to show wheel information.'
+		, default=None
+	)
+
 	return parser
 
 
@@ -270,10 +282,31 @@ def run_fortunae (args):
 	return 0
 
 
+def run_bhavacakra (args):
+	import modulefinder
+
+	p = pathlib.Path (args.script_path)
+	if not p.exists ():
+		holz.error (f'Could not find script at "{args.script_path}".')
+		return 13
+
+	finder = modulefinder.ModuleFinder ()
+	finder.run_script (args.script_path)
+	module_list = finder.modules.items ()
+
+	#print ('\n'.join ([str (m) for m in module_list]))
+	for name, mod in module_list:
+		print('%s: ' % name, end='')
+		print(','.join(list(mod.globalnames.keys())[:3]))
+
+	return 0
+
+
 commands = {
 	'refresh': run_refresh,
 	'versions': run_versions,
-	'fortunae': run_fortunae
+	'fortunae': run_fortunae,
+	'bhavacakra': run_bhavacakra,
 }
 
 
