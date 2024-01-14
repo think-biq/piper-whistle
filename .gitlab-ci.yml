@@ -21,8 +21,23 @@ test-functional:
       when: manual
       allow_failure: true
   script:
-    - make pip-update-pip pip-install-dev pip-install-runtime
+    - make pip-update-all
     - make run-tests
+
+test-security:
+  stage: pre-release-test
+  rules:
+    # This ensures that only pushes to the default branch are considered.
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+    # This ensures that only pushes to the staging / testing branch
+    - if: $CI_COMMIT_REF_NAME == "staging"
+      when: manual
+      allow_failure: true
+  script:
+    - make pip-update-all
+    - make audit
 
 build-wheel:
   stage: build
@@ -156,7 +171,7 @@ test-release-pypi-test:
     - python3 -m pip install --trusted-host test.pypi.org --trusted-host test-files.pythonhosted.org --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ piper_whistle==$(python3 -m src.piper_whistle.version)
     - piper_whistle -h
     - echo "Setting up search index ..."
-    - piper_whistle -vR
+    - piper_whistle refresh
     - echo "Checking if HU is supported ..."
     - if [ "hu_HU" = "$(piper_whistle guess hung)" ]; then echo "Found hungarian language support"; else exit 13; fi
     - echo "Checking if model at index 1 is available ..."

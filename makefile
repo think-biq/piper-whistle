@@ -5,12 +5,6 @@ FILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_DIR := $(realpath -s $(shell dirname $(FILE_PATH)))
 SHELL := /bin/bash
 
-
-#	$(shell python3 "$(PROJECT_DIR)/build-config.py" \
-#		$(shell python3 -m src.piper_whistle.version) \
-#		"$(PROJECT_DIR)/docs.cfg"\
-#		"$(PROJECT_DIR)/docs.cfg.live")
-
 audit:
 	pip-audit --desc
 	pip-audit --fix --dry-run
