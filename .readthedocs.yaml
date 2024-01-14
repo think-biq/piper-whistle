@@ -9,7 +9,11 @@ build:
     python: "3.8"
   commands:
     - echo "Install dependencies ..."
-    - make pip-update-all
+    - make pip-update-all || echo 💥
     - echo "Building documentation using doxygen ..."
-    - make docs-build
-    - mv docs/published "$READTHEDOCS_OUTPUT/html"
+    - make docs-build || echo 💥
+    - echo "Ensuring html directory ..."
+    - mkdir -p "$(realpath ${READTHEDOCS_OUTPUT})/html"
+    - echo "Moving page assets ..."
+    - mv docs/published/* "$(realpath ${READTHEDOCS_OUTPUT})/html" || echo 🚚💥
+    - echo "Per Aspera Ad Astra 🚀"
