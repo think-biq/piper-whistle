@@ -8,14 +8,6 @@ build:
   tools:
     python: "3.8"
   commands:
-    - echo "Making sure system is setup accordingly ..."
-    - apt-get update -y --fix-missing
-    - apt-get install -y -q python3 python3-pip python3.8-venv make doxygen
-    - apt-get install -y -q bash
-    - echo "Setting default shell ..."
-    - chsh -s /bin/bash
-    - echo "Chaning shell ..."
-    - /bin/bash
     - echo "Install dependencies ..."
     - make pip-update-all
     - echo "Building documentation using doxygen ..."
