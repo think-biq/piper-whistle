@@ -39,6 +39,20 @@ test-security:
     - make pip-update-all
     - make audit
 
+test-linting:
+  stage: pre-release-test
+  rules:
+    # This ensures that only pushes to the default branch are considered.
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      allow_failure: true
+    # This ensures that only pushes to the staging / testing branch
+    - if: $CI_COMMIT_REF_NAME == "staging"
+      when: manual
+      allow_failure: true
+  script:
+    - make pip-update-all
+    - make lint
+
 build-wheel:
   stage: build
   rules:
