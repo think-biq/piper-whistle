@@ -67,7 +67,9 @@ def float_round (x : float, digits : int = 2):
 	return x
 
 
-def download_as_stream_with_progress (url: str, file_path: str, label: str = 'dl'):
+def download_as_stream_with_progress (
+	url: str, file_path: str, label: str = 'dl'
+):
 	"""! Downloads a resource via streaming get request and shows progress.
 	@param url Target URL to download.
 	@param file_path Path to store downloaded file to.
@@ -79,8 +81,9 @@ def download_as_stream_with_progress (url: str, file_path: str, label: str = 'dl
 		holz.error (f'Could not fetch "{url}"! (c: {resp.status_code})')
 		try:
 			import rich
-			rich.inspect (r)
-		except:
+			rich.inspect (resp)
+		except Exception as e:
+			holz.debug (str (e))
 			holz.error (
 				f'Skipping verbose response logging. '
 				f'Module "rich" not installed.'

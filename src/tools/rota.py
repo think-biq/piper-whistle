@@ -179,7 +179,10 @@ def run_versions (args):
 	try:
 		import packaging.version
 
-		versions = [packaging.version.parse(v) for v in list (j['releases'].keys ())]
+		versions = [
+			packaging.version.parse(v)
+			for v in list (j['releases'].keys ())
+		]
 		sorted_versions = sorted(versions)
 		sorted_versions = [str(v) for v in sorted_versions]
 		print ('\n'.join (sorted_versions))
@@ -187,7 +190,9 @@ def run_versions (args):
 		return 0
 	except Exception as e:
 		holz.debug (str (e))
-		holz.debug ('Could not import package packaging. Falling back on best guess.')
+		holz.debug (
+			'Could not import package packaging. Falling back on best guess.'
+		)
 		pass
 
 	def convert_version_component (component):
@@ -196,8 +201,11 @@ def run_versions (args):
 		except Exception:
 			return 999
 
+	def sort_by_component (name):
+		return list (map (convert_version_component, name.split ('.')))
+
 	version_names = list (j['releases'].keys ())
-	version_names.sort (key = lambda name: list (map (convert_version_component, name.split ('.'))))
+	version_names.sort (key = sort_by_component)
 	print ("\n".join (version_names))
 
 	return 0
@@ -211,12 +219,14 @@ def _parse_timestamp (date_string):
 		parsed = datetime.datetime.strptime (date_string, format_string)
 		return parsed
 	except ValueError as ex:
+		holz.debug (str (ex))
 		holz.debug ('Failed to parse date. Trying simper format ...')
 		format_string = '%Y-%m-%dT%H:%M:%SZ'
 
 	try:
 		parsed = datetime.datetime.strptime (date_string, format_string)
 	except Exception as ex:
+		holz.debug (str (ex))
 		holz.error (f'Could not determine datetime format for "{date_string}".')
 		return None
 

@@ -9,7 +9,8 @@ import logging
 default_level = logging.WARNING
 default_logger_name = 'holz'
 default_logger = logging.getLogger (default_logger_name)
-# All options at https://docs.python.org/3.8/library/logging.html#logrecord-attributes
+# All options at
+# https://docs.python.org/3.8/library/logging.html#logrecord-attributes
 default_format_str = u'[%(asctime)s][%(levelname)s][%(name)s]: %(message)s'
 default_formatter = logging.Formatter (default_format_str)
 default_overrides = {}
@@ -21,36 +22,40 @@ ALWAYS_FLUSH = False
 CURRENT_LOG_OVERRIDES = default_overrides
 
 
-def configure (l, lvl, fmt, silent = False):
+def configure (lg, lvl, fmt, silent = False):
 	'''Recreates output stream and configures given logger.'''
 	# Avoid propagation and clear previous stream handlers.
-	l.propagate = False
-	l.handlers.clear ()
+	lg.propagate = False
+	lg.handlers.clear ()
 
 	# Change logger level.
 	if not silent:
-		default_logger.debug (f'Setting {l} to level {lvl}')
-	l.setLevel (lvl)
+		default_logger.debug (f'Setting {lg} to level {lvl}')
+	lg.setLevel (lvl)
 
 	# Create streaming log channler and set level.
 	ch = logging.StreamHandler ()
 	ch.setLevel (lvl)
 	ch.setFormatter (fmt)
-	ch.set_name(f'{l.name}:StreamHandler')
-	l.addHandler (ch)
+	ch.set_name(f'{lg.name}:StreamHandler')
+	lg.addHandler (ch)
 
-	return l
+	return lg
 
 
-def _handle_logger_config_override (overrides, l, silent = default_setup_silent):
+def _handle_logger_config_override (
+	overrides, lg, silent = default_setup_silent
+):
 	'''Utility function to override logger specific configurations.'''
-	lvl = overrides[l.name]['level']
+	lvl = overrides[lg.name]['level']
 	fmttr = default_formatter
-	if 'formatter' in overrides[l.name] \
-		and not (overrides[l.name]['formatter'] is None \
-		):
-		fmttr = overrides[l]['formatter']
-	configure (l, lvl, fmttr, silent = silent)
+	if (
+		('formatter' in overrides[lg.name])
+		and
+		(not (overrides[lg.name]['formatter'] is None))
+	):
+		fmttr = overrides[lg]['formatter']
+	configure (lg, lvl, fmttr, silent = silent)
 
 
 def setup (log_name
@@ -117,18 +122,18 @@ def normalize (overrides = {}, silent = default_setup_silent):
 	loggers = [logging.getLogger ()] \
 		+ [logging.getLogger (name) for name in logging.root.manager.loggerDict]
 
-	for l in loggers:
+	for lg in loggers:
 		if not silent:
-			default_logger.debug (f'Normalizing setup for logger {l} ...')
-		if l.name in CURRENT_LOG_OVERRIDES:
+			default_logger.debug (f'Normalizing setup for logger {lg} ...')
+		if lg.name in CURRENT_LOG_OVERRIDES:
 			if not silent:
-				default_logger.debug (f'Found override for "{l}". Applying ...')
+				default_logger.debug (f'Found override for "{lg}". Applying ...')
 			_handle_logger_config_override (CURRENT_LOG_OVERRIDES
-				, l
+				, lg
 				, silent = silent
 			)
 		else:
-			configure (l, default_level, default_formatter, silent = silent)
+			configure (lg, default_level, default_formatter, silent = silent)
 
 
 def _log (method, message, category, flush = default_flush):

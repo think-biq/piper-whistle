@@ -34,7 +34,7 @@ def _run_program (params):
 	p = subprocess.Popen (params
 		, bufsize=0
 		, stdout=subprocess.PIPE
-		,  stderr=subprocess.PIPE
+		, stderr=subprocess.PIPE
 	)
 
 	out, err = p.communicate ()
@@ -75,13 +75,18 @@ def run_refresh (context, args):
 			f'Please use the "refresh" command.'
 		)
 
-	holz.info (f'Fetching and rebuilding database from "{context["repo"]["repo-id"]}" ...')
+	holz.info (
+		f'Fetching and rebuilding database '
+		f'from "{context["repo"]["repo-id"]}" ...'
+	)
 	context = db.index_download_and_rebuild (context['paths'], context['repo'])
 	if not context:
 		holz.info (f'Could not rebuild index.')
 		return 13
 
-	holz.debug (f"Noting last update time to '{context['paths']['last-updated']}'.")
+	holz.debug (
+		f"Noting last update time to '{context['paths']['last-updated']}'."
+	)
 	with open (context['paths']['last-updated'], 'r') as f:
 		sys.stdout.write (f.read ())
 
@@ -307,8 +312,6 @@ def run_preview (context, args):
 	code = args.language_code
 	voice_i = args.voice_index
 	speaker_i = args.speaker_index
-	index = context['db']['index']
-	langdb = context['db']['languages']
 
 	holz.info (f'Looking up preview info for {code}:{voice_i}:{speaker_i} ...')
 	speaker_url = None
@@ -365,7 +368,7 @@ def run_preview (context, args):
 
 		# After setup, load the module and play the sound.
 		from playsound import playsound
-		# TODO: On linux, this spins up another python instance, which is 
+		# TODO: On linux, this spins up another python instance, which is
 		# not the most convenient way in terms of stopping / cancelling.
 		playsound (file_path.as_posix (), block = True)
 
@@ -383,8 +386,6 @@ def run_install (context, args):
 	dry_run = args.dry_run
 	code = args.language_code
 	voice_i = args.voice_index
-	index = context['db']['index']
-	langdb = context['db']['languages']
 
 	download_info = db.assemble_download_info (context, code, voice_i)
 	if not download_info:

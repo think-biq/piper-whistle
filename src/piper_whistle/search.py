@@ -14,10 +14,12 @@ def looks_like (needle, haystack, threshold = 0.66, case_sensitive = True):
 
 	@param needle Search phrase.
 	@param haystack	Corpuse to search in.
-	@param threshold Match coefficient [0,1] Higher values force stricter closeness.
+	@param threshold	Match coefficient [0,1] Higher
+						values force stricter closeness.
 	@param case_sensitive Wheter to care for case differences.
 
-	@return Returns a touple of whether match occurs, and the confidence coefficient.
+	@return	Returns a touple of whether match occurs,
+			and the confidence coefficient.
 	"""
 	if not case_sensitive:
 		needle = needle.lower ()

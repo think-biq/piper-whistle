@@ -14,7 +14,6 @@ import tempfile
 import pathlib
 import io
 import re
-import pathlib
 import inspect
 import logging
 import unittest
@@ -110,8 +109,8 @@ def check_if_timestamp (result):
 
 
 class CommonBaseTests (unittest.TestCase):
-	LOG_SETUP_SILENT = True # Whether holz should be silent.
-	LOG = logging.getLogger ('CommonBaseTests') # Local (class) logger.
+	LOG_SETUP_SILENT = True  # Whether holz should be silent.
+	LOG = logging.getLogger ('CommonBaseTests')  # Local (class) logger.
 
 	@classmethod
 	def setup_logging (cls, overrides = {}):
@@ -167,8 +166,8 @@ class CommonBaseTests (unittest.TestCase):
 
 
 class ModuleTests (CommonBaseTests):
-	LOG_SETUP_SILENT = True # Whether holz should be silent.
-	LOG = logging.getLogger ('ModuleTests') # Local (class) logger.
+	LOG_SETUP_SILENT = True  # Whether holz should be silent.
+	LOG = logging.getLogger ('ModuleTests')  # Local (class) logger.
 
 	@classmethod
 	def setUpClass (cls):
@@ -215,8 +214,8 @@ class CliCommandTests (CommonBaseTests):
 	""" Using goofy naming scheme for test case ordering.
 	Suggested here https://stackoverflow.com/a/7085051
 	"""
-	LOG_SETUP_SILENT = True # Whether holz should be silent.
-	LOG = logging.getLogger('CliCommandTests') # Local (class) logger.
+	LOG_SETUP_SILENT = True  # Whether holz should be silent.
+	LOG = logging.getLogger('CliCommandTests')  # Local (class) logger.
 
 	def _run_whistle_main (self, args):
 		cli_output = io.StringIO ()
@@ -246,8 +245,10 @@ class CliCommandTests (CommonBaseTests):
 		# Setup CLI argument list for every test procedure.
 		data_root = cls.data_root_path.as_posix ()
 		app_name = 'whistle'
+
 		def make_cli_arg_list (*params):
 			return [app_name, '-P', data_root, *list (params)]
+
 		cls.test_arguments = {
 			'create-index': make_cli_arg_list ('refresh', '-v'),
 			'list-languages': make_cli_arg_list ('list', '-L'),

@@ -3,11 +3,16 @@
 Defines functions to interact with the meta information / database of whistle.
 All relevant files and paths can be accessed via "data_paths ()"
 
-The index is refreshed by querying the hugging face repository "rhasspy/piper-voices"
+The index is refreshed by querying the hugging face
+repository "rhasspy/piper-voices"
 
 Here's an example of how to identify different parts of a voice via URL
 
-URL: https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_PT/tug%C3%A3o/medium/pt_PT-tug%C3%A3o-medium.onnx.json
+URL:
+	https://huggingface.co
+		/rhasspy/piper-voices
+		/resolve/main
+		/pt/pt_PT/tug%C3%A3o/medium/pt_PT-tug%C3%A3o-medium.onnx.json
 
 	* root: https://huggingface.co/rhasspy/piper-voices
 	* op: /resolve
@@ -42,13 +47,17 @@ def data_paths (appdata_root_path = userpaths.get_appdata ()):
 	* data: Root path of whistle data.
 	* voices: Storage path for voice data.
 	* index: Language details cached from huggingface repository (JSON).
-	* languages: Language data lookup (JSON), built from index. Uses language code as keys.
-	* last-updated: A flat file containig the timestamp when whistle data was refreshed last.
+	* languages: 	Language data lookup (JSON), built from index.
+					Uses language code as keys.
+	* last-updated: 	A flat file containig the timestamp when whistle data
+						was refreshed last.
 
-	@param config_root_path Path to the directory, where applications can store configuration and data.
+	@param config_root_path	Path to the directory, where applications
+							can store configuration and data.
 	@return Returns a map with respective paths.
 	"""
-	whistle_data_path = pathlib.Path (appdata_root_path).joinpath ('piper-whistle')
+	whistle_data_path = pathlib.Path (appdata_root_path)
+	whistle_data_path = whistle_data_path.joinpath ('piper-whistle')
 	return {
 		'data': whistle_data_path.as_posix (),
 		'repo': whistle_data_path.joinpath ('repo.json').as_posix (),
@@ -81,7 +90,8 @@ def remote_repo_config (paths):
 			'voice-index': 'voices.json'
 		}
 		holz.debug (f'Writing default repo config to "{repo_config_file}" ...')
-		# Make sure data root path exists, in case repo config is the first to use it.
+		# Make sure data root path exists, in case
+		# repo config is the first to use it.
 		repo_config_file.parent.mkdir (parents = True, exist_ok = True)
 		with open (repo_config_file, 'w') as f:
 			json.dump (repo, f, indent = 4)
@@ -98,8 +108,10 @@ def remote_repo_build_branch_root (repo_info):
 
 	The base URL will point to the root of the repository, including the branch.
 
-	@param repo_info Remote repo information map. Can be obtained via @ref "remote_repo_config ()".
-	@return Returns a list of file info maps with keys {path,size} or None on error.
+	@param repo_info	Remote repo information map.
+						Can be obtained via @ref "remote_repo_config ()".
+	@return	Returns a list of file info maps with keys {path,size}
+			or None on error.
 	"""
 	repo_root = f"{repo_info['root']}/{repo_info['repo-id']}"
 	branch_root = f"{repo_root}/resolve/{repo_info['branch']}"
@@ -113,8 +125,10 @@ def remote_repo_build_index_url (repo_info):
 	This will produce the link to the voices.json index file, which will be used
 	to build whistle database and lookup.
 
-	@param repo_info Remote repo information map. Can be obtained via @ref "remote_repo_config ()".
-	@return Returns a list of file info maps with keys {path,size} or None on error.
+	@param repo_info	Remote repo information map.
+						Can be obtained via @ref "remote_repo_config ()".
+	@return Returns a list of file info maps with keys {path,size}
+			or None on error.
 	"""
 	branch_root = remote_repo_build_branch_root (repo_info)
 	index_url = f"{branch_root}/{repo_info['voice-index']}"
@@ -143,7 +157,7 @@ def assemble_download_info (context, code, voice_i):
 		],
 		'local_path_relative': /some/local/path,
 		'selection_name': selector name,
-	}	
+	}
 
 	@param context Context information and whistle database.
 	@param code Language code of voice to be downloaded.
@@ -166,6 +180,9 @@ def assemble_download_info (context, code, voice_i):
 			holz.info (f'Requesting "{voice_name}" ...')
 			voice_details = index[voice_name]
 
+			selection_name = \
+				f"{code}:{voice_details['name']}" \
+				f"@{voice_details['quality']}"
 			download_info = {
 				'langugage': code,
 				'model': None,
@@ -173,7 +190,7 @@ def assemble_download_info (context, code, voice_i):
 				'card': None,
 				'samples': [],
 				'local_path_relative': f'{code}/{voice_name}',
-				'selection_name': f"{code}:{voice_details['name']}@{voice_details['quality']}"
+				'selection_name': selection_name
 			}
 
 			# Identify onnx speech model files.
@@ -198,7 +215,9 @@ def assemble_download_info (context, code, voice_i):
 					}
 
 			# Get voice URL where path is one layer up (omitting model name).
-			voice_base_url = util.url_path_cut (download_info['model']['url'], 1)
+			voice_base_url = util.url_path_cut (
+				download_info['model']['url'], 1
+			)
 
 			def build_sample_url (base, speaker_name, speaker_id, ext = 'mp3'):
 				return f'{base}/samples/{speaker_name}_{speaker_id}.{ext}'
@@ -210,8 +229,12 @@ def assemble_download_info (context, code, voice_i):
 				download_info['samples'].append (speaker_url)
 			else:
 				for speaker_name in voice_details['speaker_id_map']:
-					speaker_id = int(voice_details['speaker_id_map'][speaker_name])
-					speaker_url = build_sample_url (voice_base_url, 'speaker', speaker_id)
+					speaker_id = int (
+						voice_details['speaker_id_map'][speaker_name]
+					)
+					speaker_url = build_sample_url (
+						voice_base_url, 'speaker', speaker_id
+					)
 					download_info['samples'].append (speaker_url)
 
 			return download_info
@@ -241,8 +264,10 @@ def _fetch_url_raw (url):
 
 def index_fetch_raw_filelist (repo_info):
 	"""! Query the huggingface repository for a list of model files.
-	@param repo_info Remote repo information map. Can be obtained via @ref "remote_repo_config ()".
-	@return Returns a list of file info maps with keys {path,size} or None on error.
+	@param repo_info	Remote repo information map.
+						Can be obtained via @ref "remote_repo_config ()".
+	@return Returns a list of file info maps with keys {path,size}
+			or None on error.
 	"""
 	import huggingface_hub as hf
 
@@ -253,7 +278,9 @@ def index_fetch_raw_filelist (repo_info):
 	if 300 > r.status_code:
 		filelist = []
 		for file in r.siblings:
-			filelist.append ({ 'path': file.rfilename, 'size': file.size })
+			filelist.append ({
+				'path': file.rfilename, 'size': file.size
+			})
 
 		return filelist
 
@@ -263,7 +290,8 @@ def index_fetch_raw_filelist (repo_info):
 
 def index_fetch_raw (repo_info):
 	"""! Query the huggingface repository for most recent voice index.
-	@param repo_info Remote repo information map. Can be obtained via @ref "remote_repo_config ()".
+	@param repo_info	Remote repo information map.
+						Can be obtained via @ref "remote_repo_config ()".
 	@return Returns parse json object of voice index.
 	"""
 	url = remote_repo_build_index_url (repo_info)
@@ -292,13 +320,17 @@ def _parse_model_card (card_text):
 			continue
 
 		if read_training_status:
-			l = line.lower ()
-			if l.startswith ('finetuned'):
+			lowerline = line.lower ()
+			if lowerline.startswith ('finetuned'):
 				entry['training'] = 'Tuned'
-				entry['reference'] = line.replace ('Finetuned from', '').strip ()
-			elif l.startswith ('fine-tuned'):
+				entry['reference'] = line \
+					.replace ('Finetuned from', '') \
+					.strip ()
+			elif lowerline.startswith ('fine-tuned'):
 				entry['training'] = 'Tuned'
-				entry['reference'] = line.replace ('Fine-tuned from', '').strip ()
+				entry['reference'] = line \
+					.replace ('Fine-tuned from', '') \
+					.strip ()
 			else:
 				entry['training'] = 'Original'
 				entry['reference'] = line.replace ('Trained from scratch', '')
@@ -317,14 +349,15 @@ def _parse_model_card (card_text):
 
 
 def index_download_and_rebuild (paths, repo_info):
-	"""! Fetch latest voice index and build lookup database, then recreates context.
+	"""! Fetch latest voice index and build lookup database,
+	then recreates context.
 
 	Using the info on data paths and remote repository, it fetches the latest
 	voice information, re-builds the cache / database, creates a context
 	and returns it.
 
-	@param context Context map containig whistle index and language info.
-	               Can be created via @ref "context_create ()".
+	@param context 	Context map containig whistle index and language info.
+					Can be created via @ref "context_create ()".
 
 	@return Returns parse json object of voice index.
 	"""
@@ -349,11 +382,11 @@ def index_download_and_rebuild (paths, repo_info):
 	holz.info ('Rebuilding language database ...')
 	langdb = {}
 	for voice in index:
-		l = index[voice]['language']
-		if not (l['code'] in langdb):
-			langdb[l['code']] = l
-			langdb[l['code']]['voices'] = []
-		langdb[l['code']]['voices'].append (index[voice]['key'])
+		voice_lang = index[voice]['language']
+		if not (voice_lang['code'] in langdb):
+			langdb[voice_lang['code']] = voice_lang
+			langdb[voice_lang['code']]['voices'] = []
+		langdb[voice_lang['code']]['voices'].append (index[voice]['key'])
 
 	with open (paths['languages'], 'w') as f:
 		json.dump (langdb, f, indent = 4)
@@ -371,7 +404,7 @@ def index_download_and_rebuild (paths, repo_info):
 		base_url = remote_repo_build_branch_root (repo_info)
 
 		for code in langdb:
-			holz.info (f'Processing "{code}":')				
+			holz.info (f'Processing "{code}":')
 			voice_i = 0
 			for voice_name in langdb[code]['voices']:
 				holz.info (f"\tFetching model card for {voice_i}: {voice_name}")
@@ -403,7 +436,8 @@ def index_download_and_rebuild (paths, repo_info):
 	context = context_create (paths, repo_info)
 
 	"""TODO: consider automatic lookup / best guess of corpus data
-	# https://raw.githubusercontent.com/coqui-ai/open-speech-corpora/master/README.md
+	https://raw.githubusercontent.com
+	/coqui-ai/open-speech-corpora/master/README.md
 	"""
 	return context
 
@@ -412,9 +446,16 @@ def _context_is_valid (context):
 	paths_ok = ('paths' in context)
 	if not paths_ok:
 		holz.warn ('Data paths appear corrupt.')
-	db_ok = ('db' in context \
-		and ('index' in context['db'] and dict == type (context['db']['index'])) \
-		and ('languages' in context['db'] and dict == type (context['db']['languages'])) \
+	db_ok = (
+		'db' in context
+		and (
+			'index' in context['db']
+			and isinstance (context['db']['index'], dict)
+		)
+		and (
+			'languages' in context['db']
+			and isinstance (context['db']['languages'], dict)
+		)
 	)
 	if not db_ok:
 		holz.warn ('It appears db is corrupt.')
@@ -423,7 +464,7 @@ def _context_is_valid (context):
 		holz.warn ('Remote repository info appears corrupt.')
 
 	return paths_ok \
-		and  db_ok \
+		and db_ok \
 		and repo_ok
 
 
@@ -441,7 +482,8 @@ def context_create (paths, repo_info):
 	* repo: Repo config. See @ref "remote_repo_config ()".
 
 	@param paths Paths map. Can be obtained via @ref "data_paths ()".
-	@param repo_info Remote repo information map. Can be obtained via @ref "remote_repo_config ()".
+	@param repo_info	Remote repo information map.
+						Can be obtained via @ref "remote_repo_config ()".
 
 	@return Returns voice and language lookups.
 	"""
@@ -485,18 +527,22 @@ def context_create (paths, repo_info):
 
 
 def context_guess_language_from_name (context, needle):
-	"""! Searches the index and language lookup for a language which comes closest to your query.
+	"""! Searches the index and language lookup for a language which
+	comes closest to your query.
 
-	The search is done via fuzzy matching, trying to find the closest resemblance
-	of the language or country name you provided.
+	The search is done via fuzzy matching, trying to find the closest
+	resemblance of the language or country name you provided.
 
-	@param context Context map containig whistle index and language info. Can be created via @ref "context_create ()".
-	@param needle Search term. This will be matched against countries, language names, codes.
+	@param context	Context map containig whistle index and language info.
+					Can be created via @ref "context_create ()".
+	@param needle	Search term. This will be matched against countries,
+					language names, codes.
 
-	@return Returns the corresponding country code, or None if no match could be found.
+	@return	Returns the corresponding country code,
+			or None if no match could be found.
 	"""
 	langdb = context['db']['languages']
-	matching_code = None	
+	matching_code = None
 
 	for lang_code in langdb:
 		matched, c = search.looks_like (needle, lang_code, 0.91, False)
@@ -540,7 +586,8 @@ def model_list_installed (paths):
 	' code: Language / Country code. (e.g. en_GB)
 	' path: The absolute path to the onnx model.
 
-	@param context Context map containig whistle index and language info. Can be created via @ref "context_create ()".
+	@param context	Context map containig whistle index and language info.
+					Can be created via @ref "context_create ()".
 
 	@return Returns a list containing all installed models.
 	"""
@@ -570,8 +617,8 @@ def model_list_installed (paths):
 def model_resolve_path (paths, model_info):
 	"""! Searches piper-whistle cache for a model corresponding to given specs.
 
-	Checks the user cache path (i.e. ~/.config/piper-whistle on *nix) for a model
-	constraied by given name, quality and speaker.
+	Checks the user cache path (i.e. ~/.config/piper-whistle on *nix)
+	for a model constraied by given name, quality and speaker.
 
 	The returned list contains map object with the following keys:
 
@@ -587,7 +634,7 @@ def model_resolve_path (paths, model_info):
 	"""
 	name = model_info['name']
 	quality = model_info['quality']
-	speaker = model_info['speaker']
+	# TODO: constraint speaker = model_info['speaker']
 
 	voice_file_path = None
 	p = pathlib.Path (paths['voices'])
@@ -613,7 +660,10 @@ def model_remove (paths, model_info):
 	"""
 	model_path = model_resolve_path (paths, model_info)
 	if not model_path:
-		holz.warn (f'Could not find model with name "{model_info["name"]}@{model_info["quality"]}".')
+		holz.warn (
+			f'Could not find model with name '
+			f'"{model_info["name"]}@{model_info["quality"]}".'
+		)
 		return False
 
 	p = pathlib.Path (model_path)
@@ -626,6 +676,8 @@ def model_remove (paths, model_info):
 	holz.debug (f'Removing "{pr}" ...')
 	pr.rmdir ()
 
-	sys.stdout.write (f'Removed "{model_info["name"]}@{model_info["quality"]}".\n')
+	sys.stdout.write (
+		f'Removed "{model_info["name"]}@{model_info["quality"]}".\n'
+	)
 
 	return True

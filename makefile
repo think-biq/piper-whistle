@@ -9,6 +9,11 @@ audit:
 	pip-audit --desc
 	pip-audit --fix --dry-run
 
+lint:
+	flake8 \
+		--ignore W191,E211,E128,E203,E124,F541,E402,E251,W504,W503 \
+		"$(PROJECT_DIR)/src"
+
 readme-build:
 	python3 tmplr build-readme \
 		"$(PROJECT_DIR)/etc/readme.md.tmpl" \

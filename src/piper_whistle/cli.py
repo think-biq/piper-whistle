@@ -9,7 +9,7 @@ import argparse
 import logging
 # Append root package to path so it can be called with absolute path.
 sys.path.append (str (pathlib.Path(__file__).resolve().parents[1]))
-# ..
+# Then import whistle modules via absolute path.
 from piper_whistle import holz
 from piper_whistle import db
 from piper_whistle import cmds
@@ -34,7 +34,11 @@ class WhistleArgsParserException (Exception):
 	'''.'''
 	LOG = logging.getLogger ('whistle-args-exception')
 
-	def __init__ (self, status : int, message : str, help_requested : bool = False):
+	def __init__ (self
+		, status : int
+		, message : str
+		, help_requested : bool = False
+	):
 		self.LOG.debug (
 			f'Creating new (status: {status}), '
 			f'message: "{message}", '
@@ -67,7 +71,9 @@ class WhistleArgsParser (argparse.ArgumentParser):
 	def print_help (self):
 		'''.'''
 		self._help_requested = True
-		self.LOG.debug ('Printing help, then raising WhistleArgsParserException.')
+		self.LOG.debug (
+			'Printing help, then raising WhistleArgsParserException.'
+		)
 		# Idea based on discussion at:
 		# https://stackoverflow.com/a/61039719
 		# First print auto-generated help text, then instead of exiting,
@@ -145,7 +151,9 @@ def create_arg_parser (prog = 'piper_whistle'):
 	)
 	parser.add_argument ('-R', '--refresh'
 		, action='store_true'
-		, help='Refreshes (or sets up) language index by downloading the latest lookup.'
+		, help=
+			'Refreshes (or sets up) language index '
+			'by downloading the latest lookup.'
 		, default=False
 	)
 
@@ -169,9 +177,10 @@ def create_arg_parser (prog = 'piper_whistle'):
 	)
 	refresh_args.add_argument ('-R', '--repository'
 		, type=str
-		, help=\
-			'Configures the huggingface repository. Will be used to build index,'
-			' and download all data (e.g. models) from.'
+		, help=
+			'Configures the huggingface repository. '
+			'Will be used to build index, and download '
+			'all data (e.g. models) from.'
 		, default='rhasspy/piper-voices'
 	)
 
@@ -225,7 +234,9 @@ def create_arg_parser (prog = 'piper_whistle'):
 	)
 	speak_args.add_argument ('-c', '--channel'
 		, type=str
-		, help='Path to channel (named pipe (aka. fifo)) to which piper is listening.'
+		, help=
+			'Path to channel (named pipe (aka. fifo)) '
+			'to which piper is listening.'
 		, default='/opt/wind/channels/speak'
 	)
 	speak_args.add_argument ('-j', '--json'
@@ -237,10 +248,10 @@ def create_arg_parser (prog = 'piper_whistle'):
 		, action='store_true'
 		, help='Encode the text directly.'
 		, default=False
-	)	
+	)
 	speak_args.add_argument ('-o', '--output'
 		, type=str
-		, help=\
+		, help=
 			'Instead of streaming to audio channel, specifies a path to wav'
 			' file where speech will be store in.'
 		, default=None
@@ -421,12 +432,12 @@ def main (custom_args, force_debug = False):
 
 	if None is parser_ex:
 		holz.debug ('Parsed arguments without exception.')
-	elif type (parser_ex) == WhistleArgsParserException:
+	elif parser_ex is WhistleArgsParserException:
 		# So here we are, exception as flow control. It's just very convenient
 		# to be able to identify help requested, since otherwise it seems
 		# I'd have to equip every sub-arg-parser with a reference to the main
-		# parser and then notify when help was requested in any sub-command.
-		# So it comes down to lazyness?! Or economy? Anyway, it seems reasonable.
+		# parser and then notify when help was requested in any sub-command. So
+		# it comes down to lazyness?! Or economy? Anyway, it seems reasonable.
 		if parser_ex.help_requested:
 			holz.debug ('Parser help was requested.')
 			# Since message has already been put to stdout, we can exit.
@@ -440,7 +451,6 @@ def main (custom_args, force_debug = False):
 	else:
 		holz.fatal (f'Unexpected error: {parser_ex}')
 		return 23
-
 
 	# Determine log level for holz setup.
 	if args.debug or force_debug:
@@ -459,7 +469,8 @@ def main (custom_args, force_debug = False):
 		return 0
 
 	if args.help:
-		# 'Print only function', since overridden print_help raises an exception.
+		# Use 'print only function', since overridden
+		# print_help raises an exception.
 		parser.print_help_raw ()
 		return 0
 
@@ -477,7 +488,8 @@ def main (custom_args, force_debug = False):
 	# Fetch details on where to obtain voice data from.
 	repo_info = db.remote_repo_config (paths)
 
-	# Trying to create new context object. Might fail if database is missing / corrupt.
+	# Trying to create new context object.
+	# Might fail if database is missing / corrupt.
 	context = db.context_create (paths, repo_info)
 	if not context:
 		# Check if refresh is requestsed.
@@ -491,10 +503,11 @@ def main (custom_args, force_debug = False):
 		# Otherwise cya.
 		else:
 			holz.error (
-				f'Could not create context. ' \
+				f'Could not create context. '
 				f'Please refresh database using "{sys.argv[0]} refresh"'
 			)
-			# 'Print only function', since overridden print_help raises an exception.
+			# Use 'print only function', since overridden
+			# print_help raises an exception.
 			parser.print_help_raw ()
 			return 1
 
@@ -505,7 +518,8 @@ def main (custom_args, force_debug = False):
 			r = commands['refresh'] (context, args)
 			return r
 		holz.debug ('No command specified.')
-		# 'Print only function', since overridden print_help raises an exception.
+		# Use 'print only function', since overridden
+		# print_help raises an exception.
 		parser.print_help_raw ()
 		return 1
 
@@ -519,7 +533,8 @@ def main (custom_args, force_debug = False):
 	holz.error (f'Could not find action binding for command "{args.command}".')
 
 	# Show available commands.
-	# Use 'print only function', since overridden print_help raises an exception.
+	# Use 'print only function', since overridden
+	# print_help raises an exception.
 	parser.print_help_raw ()
 	return 1
 
