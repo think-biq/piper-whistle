@@ -133,7 +133,8 @@ release-gitlab:
   stage: release
   rules:
     # This ensures that only pushes to the release branch trigger sync.
-    - if: $CI_COMMIT_REF_NAME == "release" && $IS_TAGGED_COMMIT
+    - if: $CI_COMMIT_REF_NAME == "release"
+          && $CI_COMMIT_TAG =~ /^(?:\d+.){2}(?:\d+)$/
       allow_failure: true
   needs:
     - job: build-wheel
