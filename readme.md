@@ -110,14 +110,23 @@ after [piper][1] has finished the first payload. This way you can continually pr
 ### list
 
 ```bash
-usage: piper_whistle guess [-h] [-v] language_name
-
-positional arguments:
-  language_name  A string representing a language name (or code).
+usage: piper_whistle list [-h] [-v] [-I] [-a] [-L] [-g] [-U] [-S] [-p]
+                          [-l LANGUAGE_CODE] [-i VOICE_INDEX]
 
 options:
-  -h, --help     Show help message.
-  -v, --verbose  Activate verbose logging.
+  -h, --help            Show help message.
+  -v, --verbose         Activate verbose logging.
+  -I, --installed       Only list installed voices.
+  -a, --all             List voices for all available languages.
+  -L, --languages       List available languages.
+  -g, --legal           Show avaiable legal information.
+  -U, --show-url        Show URL of voice on remote host.
+  -S, --omit-speakers   Omit speakers form listing.
+  -p, --install-path    Show path of voice (if installed).
+  -l LANGUAGE_CODE, --language-code LANGUAGE_CODE
+                        Only list voices matching this language.
+  -i VOICE_INDEX, --voice-index VOICE_INDEX
+                        List only specific language voice.
 ```
 
 This command lets you investigate available voices for specific languages, or
@@ -128,14 +137,19 @@ located in the user app path, as provided by [userpaths](https://pypi.org/projec
 ### preview
 
 ```bash
-usage: piper_whistle guess [-h] [-v] language_name
-
-positional arguments:
-  language_name  A string representing a language name (or code).
+usage: piper_whistle preview [-h] [-v] [-l LANGUAGE_CODE] [-i VOICE_INDEX]
+                             [-s SPEAKER_INDEX] [-D]
 
 options:
-  -h, --help     Show help message.
-  -v, --verbose  Activate verbose logging.
+  -h, --help            Show help message.
+  -v, --verbose         Activate verbose logging.
+  -l LANGUAGE_CODE, --language-code LANGUAGE_CODE
+                        Select language.
+  -i VOICE_INDEX, --voice-index VOICE_INDEX
+                        Specific language voice. (defaults to first one)
+  -s SPEAKER_INDEX, --speaker-index SPEAKER_INDEX
+                        Specific language voice speaker. (defaults to first one)
+  -D, --dry-run         Build URL and simulate download.
 ```
 
 With `preview`, you can download and play samples audio files, for any voice
@@ -144,14 +158,16 @@ supported by [piper][1]. It currently uses [mplayer](http://www.mplayerhq.hu/) t
 ### install
 
 ```bash
-usage: piper_whistle guess [-h] [-v] language_name
+usage: piper_whistle install [-h] [-v] [-D] language_code voice_index
 
 positional arguments:
-  language_name  A string representing a language name (or code).
+  language_code  Select language.
+  voice_index    Specific language voice. (defaults to first one)
 
 options:
   -h, --help     Show help message.
   -v, --verbose  Activate verbose logging.
+  -D, --dry-run  Simulate download / install.
 ```
 
 With `install` you can fetch available voice models and store them locally for
@@ -163,14 +179,14 @@ stored in the local user data path as provide by [userpaths](https://pypi.org/pr
 ### remove
 
 ```bash
-usage: piper_whistle guess [-h] [-v] language_name
+usage: piper_whistle remove [-h] [-v] voice_selector
 
 positional arguments:
-  language_name  A string representing a language name (or code).
+  voice_selector  Selector of voice to search.
 
 options:
-  -h, --help     Show help message.
-  -v, --verbose  Activate verbose logging.
+  -h, --help      Show help message.
+  -v, --verbose   Activate verbose logging.
 ```
 
 Any installed voice model can be deleted, via `remove`. You may pass the model name or shorthand selector.
