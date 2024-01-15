@@ -7,6 +7,7 @@ import sys
 import pathlib
 import argparse
 import logging
+import traceback
 # Append root package to path so it can be called with absolute path.
 sys.path.append (str (pathlib.Path(__file__).resolve().parents[1]))
 # Then import whistle modules via absolute path.
@@ -70,6 +71,7 @@ class WhistleArgsParser (argparse.ArgumentParser):
 
 	def print_help (self):
 		'''.'''
+		self._last_error_message = 'Help requested.'
 		self._help_requested = True
 		self.LOG.debug (
 			'Printing help, then raising WhistleArgsParserException.'
@@ -82,11 +84,12 @@ class WhistleArgsParser (argparse.ArgumentParser):
 		# as a reasonable trait-off for this scenario.
 		super ().print_help ()
 		self.LOG.debug ('Here we go ...')
-		raise WhistleArgsParserException (
+		ex = WhistleArgsParserException (
 			self._last_error_code,
 			self._last_error_message,
 			help_requested=True
 		)
+		raise ex
 
 	def print_help_raw (self):
 		'''.'''
@@ -413,56 +416,47 @@ def create_arg_parser (prog: str = 'piper_whistle'):
 
 def main (custom_args: list, force_debug: bool = False):
 	"""! Main CLI processing function."""
+	holz_ready = False
+
+	if not force_debug and '-d' in custom_args:
+		force_debug = True
+
 	log_level = logging.WARNING
+	if force_debug:
+		log_level = logging.DEBUG
+		holz.activate_flush_always (True)
+		holz.setup_default ('whistle', log_level)
+		holz.normalize (silent = True)
+		holz_ready = True
 
 	# Setup and configure argparse parser.
-	parser_ex = None
 	parser = create_arg_parser ()
 	try:
 		# Parse passed arguments.
-		args = parser.parse_args (args = custom_args[1:])
-	except Exception as ex:
+		a = custom_args[1:]
+		args = parser.parse_args (args = a)
+		holz.debug (f'Got args: {args}')
+	except WhistleArgsParserException as ex:
 		# Setup holz just before handling exception.
-		if force_debug:
-			log_level = logging.DEBUG
-		holz.setup_default ('whistle', log_level)
-		holz.normalize ()
-		# Remember exception.
-		parser_ex = ex
-
-	if None is parser_ex:
-		holz.debug ('Parsed arguments without exception.')
-	elif parser_ex is WhistleArgsParserException:
+		
 		# So here we are, exception as flow control. It's just very convenient
 		# to be able to identify help requested, since otherwise it seems
 		# I'd have to equip every sub-arg-parser with a reference to the main
 		# parser and then notify when help was requested in any sub-command. So
 		# it comes down to lazyness?! Or economy? Anyway, it seems reasonable.
-		if parser_ex.help_requested:
+		if ex.help_requested:
 			holz.debug ('Parser help was requested.')
 			# Since message has already been put to stdout, we can exit.
 			return 0
 
 		# Notify about exception.
-		holz.error (parser_ex.message)
+		holz.error (f'{ex.message}')
 
 		# Return forwarded status code.
-		return parser_ex.status
-	else:
-		holz.fatal (f'Unexpected error: {parser_ex}')
+		return ex.status
+	except Exception as ex:
+		holz.fatal (f'Unexpected error: {ex}')
 		return 23
-
-	# Determine log level for holz setup.
-	if args.debug or force_debug:
-		log_level = logging.DEBUG
-	elif args.verbose:
-		log_level = logging.INFO
-
-	# Setup default log level and initialize holz logging utility.
-	holz.setup_default ('whistle', log_level)
-	holz.activate_flush_always (True)
-	holz.normalize ()
-	holz.debug ('Holz setup done and available loggers normalized.')
 
 	if args.version:
 		print (version.as_string ())
