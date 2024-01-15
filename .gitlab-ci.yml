@@ -85,8 +85,9 @@ build-wheel:
     - echo "pypi.env:"
     - cat pypi.env
     - echo "Generating release page for ${VERSION_TAG} ..."
-    - if ! etc/./query-tag-message.sh ${VERSION_TAG} > release-notes.md;
-        then echo "Could not query tag ${VERSION_TAG}."; exit 13;
+    - if ! etc/./query-tag-message.sh ${VERSION_TAG} > release-notes.md; then
+        echo "Could not query tag ${VERSION_TAG}. Defaulting to empty.";
+        echo "" > release-notes.md;
       fi
     - echo "release-notes.md:"
     - cat release-notes.md
