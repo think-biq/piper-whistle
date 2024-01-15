@@ -53,15 +53,12 @@ release:
 	PYTHONPATH=$(PWD) python3 -m build -s -n -w -o "$(PROJECT_DIR)/build/release"
 
 pypi-test:
-	twine upload --non-interactive --verbose \
-		--comment "Automatic build of release-pypi-test target." \
-		--config-file test.pypi.cfg -r testpypi \
-		--skip-existing "$(PROJECT_DIR)/build/release"/*
+	$(PROJECT_DIR)/etc/./upload-pypi.sh \
+		testpypi test.pypi.cfg "$(PROJECT_DIR)/build/release"/*
 
 pypi:
-	twine upload --non-interactive --verbose \
-		--config-file pypi.cfg -r pypi \
-		--skip-existing "$(PROJECT_DIR)/build/release"/*
+	$(PROJECT_DIR)/etc/./upload-pypi.sh \
+		pypi pypi.cfg "$(PROJECT_DIR)/build/release"/*
 
 version:
 	@python3 -m src.piper_whistle.version

@@ -202,7 +202,7 @@ class ModuleTests (CommonBaseTests):
 		img_target_file = pathlib.Path (tempfile.mktemp ())
 		self.assertTrue (not img_target_file.exists ())
 		
-		util.download_as_stream_with_progress (img_url, img_target_file.as_posix ())
+		util.download_as_stream_with_progress (img_url, img_target_file)
 		self.assertTrue (img_target_file.exists ())
 
 		img_sha1_local = None
