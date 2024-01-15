@@ -6,7 +6,7 @@ variables:
   IS_BRANCH_RELEASE: $CI_COMMIT_REF_NAME == "release"
   IS_BRANCH_STAGING: $CI_COMMIT_REF_NAME == "staging"
   IS_BRANCH_DEFAULT: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-  HAS_COMMIT_TAG: $CI_COMMIT_TAG =~ /^(?:\d+.){2}(?:\d+)$/
+  IS_COMMIT_TAGGED: $CI_COMMIT_TAG =~ /^(?:\d+.){2}(?:\d+)$/
 
 stages:
   - pre-release-test
@@ -20,13 +20,12 @@ test-functional:
   stage: pre-release-test
   rules:
     # This ensures that only pushes to the default branch are considered.
-    - if: ${IS_BRANCH_DEFAULT}
+    - if: $IS_BRANCH_DEFAULT
       when: manual
       allow_failure: true
     # This ensures that only pushes to the staging / testing branch
-    - if: $CI_COMMIT_REF_NAME == "staging"
-      when: manual
-      allow_failure: true
+    - if: $IS_BRANCH_STAGING
+      allow_failure: false
   script:
     - make pip-update-all
     - make run-tests
@@ -35,13 +34,12 @@ test-security:
   stage: pre-release-test
   rules:
     # This ensures that only pushes to the default branch are considered.
-    - if: ${IS_BRANCH_DEFAULT}
+    - if: $IS_BRANCH_DEFAULT
       when: manual
       allow_failure: true
     # This ensures that only pushes to the staging / testing branch
-    - if: ${IS_BRANCH_STAGING}
-      when: manual
-      allow_failure: true
+    - if: $IS_BRANCH_STAGING
+      allow_failure: false
   script:
     - make pip-update-all
     - make audit
@@ -50,12 +48,11 @@ test-linting:
   stage: pre-release-test
   rules:
     # This ensures that only pushes to the default branch are considered.
-    - if: ${IS_BRANCH_DEFAULT}
+    - if: $IS_BRANCH_DEFAULT
       allow_failure: true
     # This ensures that only pushes to the staging / testing branch
-    - if: ${IS_BRANCH_STAGING}
-      when: manual
-      allow_failure: true
+    - if: $IS_BRANCH_STAGING
+      allow_failure: false
   script:
     - make pip-update-all
     - make lint
@@ -64,16 +61,16 @@ build-wheel:
   stage: build
   rules:
     # This ensures that only pushes to the release branch trigger sync.
-    - if: ${IS_BRANCH_RELEASE} && ${HAS_COMMIT_TAG}
-      allow_failure: true
-    - if: ${IS_BRANCH_RELEASE}
+    - if: $IS_BRANCH_RELEASE && $IS_COMMIT_TAGGED
+      allow_failure: false
+    - if: $IS_BRANCH_RELEASE
       when: manual
-      allow_failure: true
-    - if: ${IS_BRANCH_STAGING}
-      allow_failure: true
-    - if: ${IS_BRANCH_DEFAULT}
+      allow_failure: false
+    - if: $IS_BRANCH_STAGING
+      allow_failure: false
+    - if: $IS_BRANCH_DEFAULT
       when: manual
-      allow_failure: true
+      allow_failure: false
   script:
     - make pip-update-all
     - make readme-build
@@ -88,8 +85,8 @@ build-wheel:
     - echo "pypi.env:"
     - cat pypi.env
     - echo "Generating release page for ${VERSION_TAG} ..."
-    - if ! etc/./query-tag-message.sh ${VERSION_TAG} > release-notes.md; \
-        then echo "Could not query tag ${VERSION_TAG}."; exit 13; \
+    - if ! etc/./query-tag-message.sh ${VERSION_TAG} > release-notes.md;
+        then echo "Could not query tag ${VERSION_TAG}."; exit 13;
       fi
     - echo "release-notes.md:"
     - cat release-notes.md
@@ -104,10 +101,10 @@ release-pypi-test:
   stage: release
   rules:
     # This ensures that only pushes to the staging / testing branch
-    - if: ${IS_BRANCH_STAGING}
-      allow_failure: true
+    - if: $IS_BRANCH_STAGING
+      allow_failure: false
     # or main branch are considered.
-    - if: ${IS_BRANCH_DEFAULT}
+    - if: $IS_BRANCH_DEFAULT
       when: manual
       allow_failure: true
   needs:
@@ -121,11 +118,11 @@ release-pypi:
   stage: release
   rules:
     # This ensures that only pushes to the release branch trigger sync.
-    - if: ${IS_BRANCH_RELEASE} && ${HAS_COMMIT_TAG}
-      allow_failure: true
-    - if: ${IS_BRANCH_RELEASE}
+    - if: $IS_BRANCH_RELEASE && $IS_COMMIT_TAGGED
+      allow_failure: false
+    - if: $IS_BRANCH_RELEASE
       when: manual
-      allow_failure: true
+      allow_failure: false
   needs:
     - job: build-wheel
       artifacts: true
@@ -144,9 +141,9 @@ release-gitlab:
   stage: release
   rules:
     # This ensures that only pushes to the release branch trigger sync.
-    - if: ${IS_BRANCH_RELEASE} && ${HAS_COMMIT_TAG}
+    - if: $IS_BRANCH_RELEASE && $IS_TAGGED_COMMIT
       allow_failure: true
-    - if: ${IS_BRANCH_RELEASE}
+    - if: $IS_BRANCH_RELEASE
       when: manual
       allow_failure: true
   needs:
@@ -172,8 +169,7 @@ delay-before-checking-pypi-test:
   stage: grace
   rules:
     # This ensures that only pushes to the staging / testing branch
-    - if: ${IS_BRANCH_STAGING}
-      allow_failure: true
+    - if: $IS_BRANCH_STAGING
   variables:
     DELAY_IN_SECONDS: 13
   script:
@@ -185,7 +181,7 @@ test-release-pypi-test:
   stage: post-release-test
   rules:
     # This ensures that only pushes to the default branch are considered.
-    - if: ${IS_BRANCH_STAGING}
+    - if: $IS_BRANCH_STAGING
       allow_failure: true
   script:
     - python3 -m pip install -U pip
@@ -198,9 +194,9 @@ test-release-pypi-test:
     - echo "Setting up search index ..."
     - piper_whistle refresh
     - echo "Checking if HU is supported ..."
-    - if [ "hu_HU" = "$(piper_whistle guess hung)" ]; \
-        then echo "Found hungarian language support"; \
-        else exit 13; \
+    - if [ "hu_HU" = "$(piper_whistle guess hung)" ];
+        then echo "Found hungarian language support";
+        else exit 13;
       fi
     - echo "Checking if model at index 1 is available ..."
     - piper_whistle list -U -l hu_HU -i 1
@@ -215,10 +211,10 @@ pages:
   stage: finalize
   rules:
     # This ensures that only pushes to the release branch trigger sync.
-    - if: ${IS_BRANCH_RELEASE}
+    - if: $IS_BRANCH_RELEASE
       allow_failure: true
     # or main branch are considered.
-    - if: ${IS_BRANCH_DEFAULT}
+    - if: $IS_BRANCH_DEFAULT
       when: manual
       allow_failure: true
   script:
@@ -240,10 +236,10 @@ sync:
   stage: finalize
   rules:
     # This ensures that only pushes to the release branch trigger sync.
-    - if: ${IS_BRANCH_RELEASE}
+    - if: $IS_BRANCH_RELEASE
       allow_failure: true
     # or main branch are considered.
-    - if: ${IS_BRANCH_DEFAULT}
+    - if: $IS_BRANCH_DEFAULT
       when: manual
       allow_failure: true
   script:
