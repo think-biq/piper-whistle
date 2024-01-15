@@ -172,7 +172,7 @@ class HolzNotifyLogger(logging.Logger):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		global ON_LOGGER_REQUESTED
-		
+
 		if self.name in CURRENT_LOG_OVERRIDES:
 			_handle_logger_config_override(CURRENT_LOG_OVERRIDES
 				, self

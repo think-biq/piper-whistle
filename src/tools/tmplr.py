@@ -4,15 +4,13 @@
 CLI handling of piper-whistle commands.
 """
 # 2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
-import os
 import io
 import sys
 import pathlib
 import argparse
 import string
 import logging
-from contextlib import redirect_stderr, redirect_stdout
-from unittest.mock import patch
+from contextlib import redirect_stdout
 from ..piper_whistle import cli as piper_whistle_cli
 from ..piper_whistle import version as piper_whistle_version
 
@@ -100,6 +98,8 @@ def _run_whistle_main (cmd_args):
 	cli_output = io.StringIO ()
 	with redirect_stdout (cli_output):
 		r = piper_whistle_cli.main (cmd_args)
+		if 0 < r:
+			log.debug (f'Exited piper-whistle main with error code {r}.')
 
 	out_str = cli_output.getvalue ().strip ()
 	return out_str
@@ -130,7 +130,7 @@ def run_docs_cfg (args):
 	tmpl_str = tmpl.substitute (tmpl_subs)
 	with open (out_path, 'w') as f:
 		f.write (tmpl_str)
-	
+
 	print (f'Template ready at "{out_path.as_posix ()}".')
 
 	return 0
@@ -169,7 +169,7 @@ def run_build_readme (args):
 	tmpl_str = tmpl.substitute (tmpl_subs)
 	with open (out_path, 'w') as f:
 		f.write (tmpl_str)
-	
+
 	print (f'Template ready at "{out_path.as_posix ()}".')
 
 	return 0

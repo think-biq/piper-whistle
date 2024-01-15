@@ -11,7 +11,6 @@ up a temporary directory, which is used as app data root for whistle. All
 # 2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
 import sys
 import tempfile
-import os
 import pathlib
 import io
 import re
@@ -19,12 +18,11 @@ import pathlib
 import inspect
 import logging
 import unittest
+import unittest.mock
 import math
 import hashlib
-from unittest import TestCase
-from unittest.mock import patch
-from contextlib import redirect_stdout
-from directory_tree import display_tree
+import contextlib
+import directory_tree
 
 from ..piper_whistle import cli as whistle_cli
 from ..piper_whistle import db as whistle_db
@@ -201,7 +199,7 @@ class ModuleTests (CommonBaseTests):
 
 		img_target_file = pathlib.Path (tempfile.mktemp ())
 		self.assertTrue (not img_target_file.exists ())
-		
+
 		util.download_as_stream_with_progress (img_url, img_target_file)
 		self.assertTrue (img_target_file.exists ())
 
@@ -222,8 +220,8 @@ class CliCommandTests (CommonBaseTests):
 
 	def _run_whistle_main (self, args):
 		cli_output = io.StringIO ()
-		with redirect_stdout (cli_output):
-			with patch.object (sys, 'argv', args):
+		with contextlib.redirect_stdout (cli_output):
+			with unittest.mock.patch.object (sys, 'argv', args):
 				whistle_cli.main (args)
 
 		out_str = cli_output.getvalue ().strip ()
@@ -267,7 +265,7 @@ class CliCommandTests (CommonBaseTests):
 	def tearDownClass (cls):
 		rp = cls.data_root_path.as_posix ()
 		print (f'\n[Teardown] Data directory "{rp}" after running tests:')
-		display_tree (rp)
+		directory_tree.display_tree (rp)
 
 	def test_a0_create_index (self):
 		# Ask whistle to downlnoad and rebuild voice database.

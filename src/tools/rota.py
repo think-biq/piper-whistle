@@ -7,8 +7,6 @@ Like listing all version names, or get the wheel URL for manual download.
 # 2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
 import urllib.request
 import json
-import sys
-import os
 import pathlib
 import argparse
 import logging
@@ -24,7 +22,7 @@ def create_arg_parser ():
 	"""! Build argparse command line argument parser."""
 
 	# Build top level parser object.
-	parser = argparse.ArgumentParser (prog = 'rota'
+	parser = argparse.ArgumentParser (prog='rota'
 		, formatter_class=argparse.RawTextHelpFormatter
 	)
 
@@ -126,7 +124,7 @@ def run_refresh (args):
 		return 13
 
 	holz.debug (f'Making sure data path exists ...')
-	data_path.mkdir (exist_ok = True)
+	data_path.mkdir (exist_ok=True)
 
 	holz.debug ('Preparing request ...')
 	request = urllib.request.Request (url)
@@ -150,7 +148,7 @@ def run_refresh (args):
 	holz.debug (f'Writing info to "{package_info_path}" ...')
 
 	data = json.loads (body.decode ('utf-8'))
-	raw_data = json.dumps (data, indent = 4)
+	raw_data = json.dumps (data, indent=4)
 	bw = 0
 	with open (package_info_path, 'w+') as f:
 		f.seek (0)
@@ -187,14 +185,15 @@ def run_versions (args):
 		print ('\n'.join (sorted_versions))
 
 		return 0
-	except:
+	except Exception as e:
+		holz.debug (str (e))
 		holz.debug ('Could not import package packaging. Falling back on best guess.')
 		pass
-	
+
 	def convert_version_component (component):
 		try:
 			return int (component)
-		except:
+		except Exception:
 			return 999
 
 	version_names = list (j['releases'].keys ())
@@ -206,7 +205,7 @@ def run_versions (args):
 
 def _parse_timestamp (date_string):
 	format_string = '%Y-%m-%dT%H:%M:%S.%fZ'
-	
+
 	parsed = None
 	try:
 		parsed = datetime.datetime.strptime (date_string, format_string)
@@ -270,8 +269,8 @@ def run_fortunae (args):
 		print (current['url'])
 
 		return 0
-	
-	if not args.version_name in j['releases']:
+
+	if args.version_name not in j['releases']:
 		holz.error ('Could not find release with given version.')
 		return 13
 
@@ -295,7 +294,6 @@ def run_bhavacakra (args):
 	finder.run_script (args.script_path)
 	module_list = finder.modules.items ()
 
-	#print ('\n'.join ([str (m) for m in module_list]))
 	for name, mod in module_list:
 		print('%s: ' % name, end='')
 		print(','.join(list(mod.globalnames.keys())[:3]))
@@ -325,9 +323,9 @@ def main ():
 	# Setup and initialize holz logging utility.
 	holz.setup_default ('rota'
 		, log_level
-		, silent = not args.debug
+		, silent=not args.debug
 	)
-	holz.normalize (silent = not args.debug)
+	holz.normalize (silent=not args.debug)
 
 	# Show version number.
 	if args.version:

@@ -20,12 +20,10 @@ URL: https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_PT/tug%C3%A3
 
 """
 # 2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
-import os
 import sys
 import json
 import userpaths
 import time
-import urllib
 import pathlib
 import tempfile
 # Append root package to path so it can be called with absolute path.
@@ -40,13 +38,13 @@ def data_paths (appdata_root_path = userpaths.get_appdata ()):
 	"""! Query for data paths used by whistle.
 
 	Provides a map of data paths used by whistle.
-	
+
 	* data: Root path of whistle data.
 	* voices: Storage path for voice data.
 	* index: Language details cached from huggingface repository (JSON).
 	* languages: Language data lookup (JSON), built from index. Uses language code as keys.
 	* last-updated: A flat file containig the timestamp when whistle data was refreshed last.
-	
+
 	@param config_root_path Path to the directory, where applications can store configuration and data.
 	@return Returns a map with respective paths.
 	"""
@@ -97,7 +95,7 @@ def remote_repo_config (paths):
 
 def remote_repo_build_branch_root (repo_info):
 	"""! Build repository root URL.
-	
+
 	The base URL will point to the root of the repository, including the branch.
 
 	@param repo_info Remote repo information map. Can be obtained via @ref "remote_repo_config ()".
@@ -167,7 +165,7 @@ def assemble_download_info (context, code, voice_i):
 			voice_name = voices[voice_i]
 			holz.info (f'Requesting "{voice_name}" ...')
 			voice_details = index[voice_name]
-			
+
 			download_info = {
 				'langugage': code,
 				'model': None,
@@ -258,7 +256,7 @@ def index_fetch_raw_filelist (repo_info):
 			filelist.append ({ 'path': file.rfilename, 'size': file.size })
 
 		return filelist
-	
+
 	holz.error (f'Could not fetch raw list from "{repo_id}".')
 	return None
 
@@ -324,10 +322,10 @@ def index_download_and_rebuild (paths, repo_info):
 	Using the info on data paths and remote repository, it fetches the latest
 	voice information, re-builds the cache / database, creates a context
 	and returns it.
-	
+
 	@param context Context map containig whistle index and language info.
 	               Can be created via @ref "context_create ()".
-	
+
 	@return Returns parse json object of voice index.
 	"""
 	holz.debug ('Ensuring data paths exists ...')
@@ -356,7 +354,7 @@ def index_download_and_rebuild (paths, repo_info):
 			langdb[l['code']] = l
 			langdb[l['code']]['voices'] = []
 		langdb[l['code']]['voices'].append (index[voice]['key'])
-	
+
 	with open (paths['languages'], 'w') as f:
 		json.dump (langdb, f, indent = 4)
 
@@ -435,13 +433,13 @@ def context_create (paths, repo_info):
 	Loads and parses whistle JSON databases (raw index and language lookup).
 
 	Returs a map containing:
-	
+
 	* paths: Data paths. See @ref "data_paths ()".
 	* db: Voice and languages information. Contains following keys:
 		* index: Voice index fetched from huggingface repository.
 		* language: Generated language lookup to select voices by language code.
 	* repo: Repo config. See @ref "remote_repo_config ()".
-	
+
 	@param paths Paths map. Can be obtained via @ref "data_paths ()".
 	@param repo_info Remote repo information map. Can be obtained via @ref "remote_repo_config ()".
 
@@ -482,7 +480,7 @@ def context_create (paths, repo_info):
 
 	if not _context_is_valid (context):
 		return None
-	
+
 	return context
 
 
@@ -536,7 +534,7 @@ def model_list_installed (paths):
 	Checks the user cache path (i.e. ~/.config/piper-whistle on *nix)
 
 	The returned list contains map object with the following keys:
-	
+
 	' name: Clean voice name.
 	' quality: Voice quality.
 	' code: Language / Country code. (e.g. en_GB)
@@ -576,7 +574,7 @@ def model_resolve_path (paths, model_info):
 	constraied by given name, quality and speaker.
 
 	The returned list contains map object with the following keys:
-	
+
 	* name: Clean voice name.
 	* quality: Voice quality.
 	* code: Language / Country code. (e.g. en_GB)
@@ -620,7 +618,7 @@ def model_remove (paths, model_info):
 
 	p = pathlib.Path (model_path)
 	pr = p.resolve ().parent
-	
+
 	for model_part in pr.iterdir ():
 		holz.debug (f'Removing "{model_part}" ...')
 		model_part.unlink ()

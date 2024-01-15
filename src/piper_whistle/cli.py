@@ -3,7 +3,6 @@
 CLI handling of piper-whistle commands.
 """
 # 2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
-import os
 import sys
 import pathlib
 import argparse
@@ -14,7 +13,6 @@ sys.path.append (str (pathlib.Path(__file__).resolve().parents[1]))
 from piper_whistle import holz
 from piper_whistle import db
 from piper_whistle import cmds
-from piper_whistle import util
 from piper_whistle import version
 
 
@@ -35,8 +33,8 @@ HELP_REQUESTED = False
 class WhistleArgsParserException (Exception):
 	'''.'''
 	LOG = logging.getLogger ('whistle-args-exception')
-	
-	def __init__ (self, status, message, help_requested = False):
+
+	def __init__ (self, status : int, message : str, help_requested : bool = False):
 		self.LOG.debug (
 			f'Creating new (status: {status}), '
 			f'message: "{message}", '
@@ -88,7 +86,7 @@ class WhistleArgsParser (argparse.ArgumentParser):
 		'''.'''
 		super ().print_help ()
 
-	def error (self, message):
+	def error (self, message: str):
 		'''.'''
 		self._last_error_message = message
 		self._last_error_code = 13
@@ -97,7 +95,7 @@ class WhistleArgsParser (argparse.ArgumentParser):
 			self._last_error_message
 		)
 
-	def exit (self, status=0, message=None):
+	def exit (self, status: int = 0, message: str = None):
 		'''.'''
 		self._last_error_code = status
 		self._last_error_message = message
@@ -349,7 +347,7 @@ def create_arg_parser (prog = 'piper_whistle'):
 		, help='Build URL and simulate download.'
 		, default=False
 	)
-	
+
 	# Setup install command and options.
 	install_args = subparsers.add_parser ('install'
 		, formatter_class=argparse.RawTextHelpFormatter
@@ -503,7 +501,7 @@ def main (custom_args, force_debug = False):
 	# Show help message if no command is provided.
 	if None is args.command:
 		if args.refresh:
-			#TODO: Deprecate -R in next major update.
+			# TODO: Deprecate -R in next major update.
 			r = commands['refresh'] (context, args)
 			return r
 		holz.debug ('No command specified.')

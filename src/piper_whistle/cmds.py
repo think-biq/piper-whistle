@@ -15,13 +15,8 @@ Command handle function get passed whistle context and argparse arguments.
 """
 # 2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
 import subprocess
-import os
 import sys
 import json
-import requests
-import userpaths
-import time
-import urllib
 import pathlib
 # Append root package to path so it can be called with absolute path.
 sys.path.append (str (pathlib.Path(__file__).resolve().parents[1]))
@@ -166,7 +161,7 @@ def run_speak (context, args):
 					op = pathlib.Path.cwd ().joinpath (args.output)
 				j['output_file'] = op.absolute ().as_posix ()
 			payload = json.dumps (j)
-		
+
 		payload = payload + '\n'
 
 		holz.info (f'Sending {len (payload)} bytes ...')
@@ -214,7 +209,7 @@ def run_list (context, args):
 			voice_i += 1
 
 		return 0
-	
+
 	if args.all:
 		for code in langdb:
 			lang = langdb[code]
@@ -242,7 +237,7 @@ def run_list (context, args):
 		return 0
 
 	code = args.language_code
-	if not code in langdb:
+	if code not in langdb:
 		holz.error (f'Could not find language with code "{code}".')
 		return 13
 
@@ -266,7 +261,7 @@ def run_list (context, args):
 				, voice_i
 			)
 			sys.stdout.write (f"\t{download_info['model']['url']}")
-		
+
 		sys.stdout.write ('\n')
 
 		if not args.omit_speakers:
@@ -314,7 +309,7 @@ def run_preview (context, args):
 	speaker_i = args.speaker_index
 	index = context['db']['index']
 	langdb = context['db']['languages']
-	
+
 	holz.info (f'Looking up preview info for {code}:{voice_i}:{speaker_i} ...')
 	speaker_url = None
 	download_info = db.assemble_download_info (context, code, voice_i)
@@ -337,7 +332,7 @@ def run_preview (context, args):
 
 	# Make sure path exists.
 	p.mkdir (parents=True, exist_ok=True)
-	
+
 	filename = util.url_path_split (speaker_url)[-1]
 	file_path = p.joinpath (filename)
 	if file_path.exists ():
@@ -395,7 +390,7 @@ def run_install (context, args):
 	if not download_info:
 		holz.error ('Could not find any downloads for this configuration.')
 		return 13
-	
+
 	p = pathlib.Path (f"{context['paths']['voices']}")
 	p = p.joinpath (f"{download_info['local_path_relative']}")
 	p = p.resolve ()
