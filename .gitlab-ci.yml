@@ -242,6 +242,10 @@ sync:
     - chmod 644 ~/.ssh/known_hosts
     - git config --global user.email "${GITHUB_USER_EMAIL}"
     - git config --global user.name "${GITHUB_USER_NAME}"
+    - git fetch --all
+    - git checkout staging
+    - git checkout release
+    - git checkout main
     - git remote rm origin 2> /dev/null
     - git remote add origin ${GITHUB_REPO_LINK}
     - git push --all
