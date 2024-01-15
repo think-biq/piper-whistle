@@ -1,4 +1,6 @@
 # Copyright (c) 2023-∞ blurryroots innovation qanat OÜ
+---
+
 image: thinkbiq/ue-plugin-staging:latest
 
 stages:
@@ -57,7 +59,8 @@ build-wheel:
   stage: build
   rules:
     # This ensures that only pushes to the release branch trigger sync.
-    - if: $CI_COMMIT_REF_NAME == "release" && $CI_COMMIT_TAG =~ /^(?:\d+.){2}(?:\d+)$/
+    - if: $CI_COMMIT_REF_NAME == "release" \
+          && $CI_COMMIT_TAG =~ /^(?:\d+.){2}(?:\d+)$/
       allow_failure: true
     - if: $CI_COMMIT_REF_NAME == "release"
       when: manual
@@ -75,12 +78,15 @@ build-wheel:
     - echo "VERSION_TAG=${VERSION_TAG}" > pypi.env
     - export WHEEL_FILE_NAME="piper_whistle-${VERSION_TAG}-py3-none-any.whl"
     - echo "WHEEL_FILE_NAME=${WHEEL_FILE_NAME}" >> pypi.env
-    - export WHEEL_FILE_URL="https://pypi.debian.net/piper-whistle/${WHEEL_FILE_NAME}"
+    - export DEP_URL_BASE="https://pypi.debian.net/piper-whistle"
+    - export WHEEL_FILE_URL="${DEP_URL_BASE}/${WHEEL_FILE_NAME}"
     - echo "WHEEL_FILE_URL=${WHEEL_FILE_URL}" >> pypi.env
     - echo "pypi.env:"
     - cat pypi.env
     - echo "Generating release page for ${VERSION_TAG} ..."
-    - if ! etc/./query-tag-message.sh ${VERSION_TAG} > release-notes.md; then echo "Could not query tag ${VERSION_TAG}."; exit 13; fi
+    - if ! etc/./query-tag-message.sh ${VERSION_TAG} > release-notes.md; \
+        then echo "Could not query tag ${VERSION_TAG}."; exit 13; \
+      fi
     - echo "release-notes.md:"
     - cat release-notes.md
   artifacts:
@@ -111,7 +117,8 @@ release-pypi:
   stage: release
   rules:
     # This ensures that only pushes to the release branch trigger sync.
-    - if: $CI_COMMIT_REF_NAME == "release" && $CI_COMMIT_TAG =~ /^(?:\d+.){2}(?:\d+)$/
+    - if: $CI_COMMIT_REF_NAME == "release" \
+          && $CI_COMMIT_TAG =~ /^(?:\d+.){2}(?:\d+)$/
       allow_failure: true
     - if: $CI_COMMIT_REF_NAME == "release"
       when: manual
@@ -134,7 +141,8 @@ release-gitlab:
   stage: release
   rules:
     # This ensures that only pushes to the release branch trigger sync.
-    - if: $CI_COMMIT_REF_NAME == "release" && $CI_COMMIT_TAG =~ /^(?:\d+.){2}(?:\d+)$/
+    - if: $CI_COMMIT_REF_NAME == "release" \
+          && $CI_COMMIT_TAG =~ /^(?:\d+.){2}(?:\d+)$/
       allow_failure: true
     - if: $CI_COMMIT_REF_NAME == "release"
       when: manual
@@ -182,18 +190,24 @@ test-release-pypi-test:
     # Need to setup test as well as live repository, to properly resolve
     # all piper-whistle dependencies. Force the staged version, as to skip
     # the live version, since live repo seems to have precedence.
-    - python3 -m pip install --trusted-host test.pypi.org --trusted-host test-files.pythonhosted.org --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ piper_whistle==$(python3 -m src.piper_whistle.version)
+    - export PGK_NAME="piper_whistle==$(python3 -m src.piper_whistle.version)"
+    - etc/./install-test-pypi.sh ${PGK_NAME}
     - piper_whistle -h
     - echo "Setting up search index ..."
     - piper_whistle refresh
     - echo "Checking if HU is supported ..."
-    - if [ "hu_HU" = "$(piper_whistle guess hung)" ]; then echo "Found hungarian language support"; else exit 13; fi
+    - if [ "hu_HU" = "$(piper_whistle guess hung)" ]; \
+        then echo "Found hungarian language support"; \
+        else exit 13; \
+      fi
     - echo "Checking if model at index 1 is available ..."
     - piper_whistle list -U -l hu_HU -i 1
     - echo "Installing model 1 ..."
     - piper_whistle install hu_HU 1
     - echo "Fetching path of model 1 ..."
-    - piper_whistle path $(piper_whistle list -S -l hu_HU -i 1 | awk '{ print $1 }')
+    - export HU_VOICE_INFO=$(piper_whistle list -S -l hu_HU -i 1)
+    - export VOICE_NAME="$(echo ${HU_VOICE_INFO} | awk '{ print $1 }')"
+    - piper_whistle path ${VOICE_NAME}
 
 pages:
   stage: finalize
