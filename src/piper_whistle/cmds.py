@@ -25,7 +25,7 @@ from piper_whistle import db
 from piper_whistle import util
 
 
-def _run_program (params):
+def _run_program (params: list):
 	"""! Runs external program with given parameters
 	@param params List of parameters to use for program invokation.
 	@return Returns a touple containing (returncode, stdout, stderr)
@@ -42,7 +42,7 @@ def _run_program (params):
 	return (p.returncode, out, err)
 
 
-def _parse_voice_selector (selector):
+def _parse_voice_selector (selector: str):
 	"""! Get voice details from selector string.
 	@param selector Voice identifying string.
 	@return Returns a touple containgin (name, quality, speaker) of the voice.

@@ -115,303 +115,303 @@ class WhistleArgsParser (argparse.ArgumentParser):
 		return self._last_error_code, self._last_error_message
 
 
-def create_arg_parser (prog = 'piper_whistle'):
+def create_arg_parser (prog: str = 'piper_whistle'):
 	"""! Build argparse command line argument parser."""
 
 	# Build top level parser object.
 	parser = WhistleArgsParser (prog = prog
-		, formatter_class=argparse.RawTextHelpFormatter
-		, add_help=False
+		, formatter_class = argparse.RawTextHelpFormatter
+		, add_help = False
 	)
 
 	# Setup global flags for verbosity level and version print.
 	parser.add_argument ('-h', '--help'
-		, action='help'
-		, help='Show help message.'
-		, default=False
+		, action = 'help'
+		, help = 'Show help message.'
+		, default = False
 	)
 	parser.add_argument ('-d', '--debug'
-		, action='store_true'
-		, help='Activate very verbose logging.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Activate very verbose logging.'
+		, default = False
 	)
 	parser.add_argument ('-v', '--verbose'
-		, action='store_true'
-		, help='Activate verbose logging.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Activate verbose logging.'
+		, default = False
 	)
 	parser.add_argument ('-V', '--version'
-		, action='store_true'
-		, help='Show version number.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Show version number.'
+		, default = False
 	)
-	parser.add_argument ('-P', '--data-root', type=str
-		, help='Root path where whistle should store config and data in.'
-		, default=None
+	parser.add_argument ('-P', '--data-root', type = str
+		, help = 'Root path where whistle should store config and data in.'
+		, default = None
 	)
 	parser.add_argument ('-R', '--refresh'
-		, action='store_true'
-		, help=
+		, action = 'store_true'
+		, help =
 			'Refreshes (or sets up) language index '
 			'by downloading the latest lookup.'
-		, default=False
+		, default = False
 	)
 
 	# Split object for subparsers.
-	subparsers = parser.add_subparsers (dest='command')
+	subparsers = parser.add_subparsers (dest = 'command')
 
 	# Setup refresh command and options.
 	refresh_args = subparsers.add_parser ('refresh'
-		, formatter_class=argparse.RawTextHelpFormatter
-		, add_help=False
+		, formatter_class = argparse.RawTextHelpFormatter
+		, add_help = False
 	)
 	refresh_args.add_argument ('-h', '--help'
-		, action='help'
-		, help='Show help message.'
-		, default=False
+		, action = 'help'
+		, help = 'Show help message.'
+		, default = False
 	)
 	refresh_args.add_argument ('-v', '--verbose'
-		, action='store_true'
-		, help='Activate verbose logging.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Activate verbose logging.'
+		, default = False
 	)
 	refresh_args.add_argument ('-R', '--repository'
-		, type=str
-		, help=
+		, type = str
+		, help =
 			'Configures the huggingface repository. '
 			'Will be used to build index, and download '
 			'all data (e.g. models) from.'
-		, default='rhasspy/piper-voices'
+		, default = 'rhasspy/piper-voices'
 	)
 
 	# Setup gues command and options.
 	guess_args = subparsers.add_parser ('guess'
-		, formatter_class=argparse.RawTextHelpFormatter
-		, add_help=False
+		, formatter_class = argparse.RawTextHelpFormatter
+		, add_help = False
 	)
 	guess_args.add_argument ('-h', '--help'
-		, action='help'
-		, help='Show help message.'
-		, default=False
+		, action = 'help'
+		, help = 'Show help message.'
+		, default = False
 	)
 	guess_args.add_argument ('-v', '--verbose'
-		, action='store_true'
-		, help='Activate verbose logging.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Activate verbose logging.'
+		, default = False
 	)
-	guess_args.add_argument ('language_name', type=str
-		, help='A string representing a language name (or code).'
-		, default=''
+	guess_args.add_argument ('language_name', type = str
+		, help = 'A string representing a language name (or code).'
+		, default = ''
 	)
 
 	# Setup path command and options.
 	selector_args = subparsers.add_parser ('path'
-		, formatter_class=argparse.RawTextHelpFormatter
+		, formatter_class = argparse.RawTextHelpFormatter
 	)
 	selector_args.add_argument ('-v', '--verbose'
-		, action='store_true'
-		, help='Activate verbose logging.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Activate verbose logging.'
+		, default = False
 	)
-	selector_args.add_argument ('voice_selector', type=str
-		, help='Selector of voice to search.'
-		, default=''
+	selector_args.add_argument ('voice_selector', type = str
+		, help = 'Selector of voice to search.'
+		, default = ''
 	)
 
 	# Setup speak command and options.
 	speak_args = subparsers.add_parser ('speak'
-		, formatter_class=argparse.RawTextHelpFormatter
-		, add_help=False
+		, formatter_class = argparse.RawTextHelpFormatter
+		, add_help = False
 	)
 	speak_args.add_argument ('-h', '--help'
-		, action='help'
-		, help='Show help message.'
-		, default=False
+		, action = 'help'
+		, help = 'Show help message.'
+		, default = False
 	)
-	speak_args.add_argument ('something', type=str
-		, help='Something to speak.'
-		, default=''
+	speak_args.add_argument ('something', type = str
+		, help = 'Something to speak.'
+		, default = ''
 	)
 	speak_args.add_argument ('-c', '--channel'
-		, type=str
-		, help=
+		, type = str
+		, help =
 			'Path to channel (named pipe (aka. fifo)) '
 			'to which piper is listening.'
-		, default='/opt/wind/channels/speak'
+		, default = '/opt/wind/channels/speak'
 	)
 	speak_args.add_argument ('-j', '--json'
-		, action='store_true'
-		, help='Encode the text as json payload. Is on by default.'
-		, default=True
+		, action = 'store_true'
+		, help = 'Encode the text as json payload. Is on by default.'
+		, default = True
 	)
 	speak_args.add_argument ('-r', '--raw'
-		, action='store_true'
-		, help='Encode the text directly.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Encode the text directly.'
+		, default = False
 	)
 	speak_args.add_argument ('-o', '--output'
-		, type=str
-		, help=
+		, type = str
+		, help =
 			'Instead of streaming to audio channel, specifies a path to wav'
 			' file where speech will be store in.'
-		, default=None
+		, default = None
 	)
 	speak_args.add_argument ('-v', '--verbose'
-		, action='store_true'
-		, help='Activate verbose logging.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Activate verbose logging.'
+		, default = False
 	)
 
 	# Setup list command and options.
 	list_args = subparsers.add_parser ('list'
-		, formatter_class=argparse.RawTextHelpFormatter
-		, add_help=False
+		, formatter_class = argparse.RawTextHelpFormatter
+		, add_help = False
 	)
 	list_args.add_argument ('-h', '--help'
-		, action='help'
-		, help='Show help message.'
-		, default=False
+		, action = 'help'
+		, help = 'Show help message.'
+		, default = False
 	)
 	list_args.add_argument ('-v', '--verbose'
-		, action='store_true'
-		, help='Activate verbose logging.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Activate verbose logging.'
+		, default = False
 	)
 	list_args.add_argument ('-I', '--installed'
-		, action='store_true'
-		, help='Only list installed voices.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Only list installed voices.'
+		, default = False
 	)
 	list_args.add_argument ('-a', '--all'
-		, action='store_true'
-		, help='List voices for all available languages.'
-		, default=False
+		, action = 'store_true'
+		, help = 'List voices for all available languages.'
+		, default = False
 	)
 	list_args.add_argument ('-L', '--languages'
-		, action='store_true'
-		, help='List available languages.'
-		, default=False
+		, action = 'store_true'
+		, help = 'List available languages.'
+		, default = False
 	)
 	list_args.add_argument ('-g', '--legal'
-		, action='store_true'
-		, help='Show avaiable legal information.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Show avaiable legal information.'
+		, default = False
 	)
 	list_args.add_argument ('-U', '--show-url'
-		, action='store_true'
-		, help='Show URL of voice on remote host.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Show URL of voice on remote host.'
+		, default = False
 	)
 	list_args.add_argument ('-S', '--omit-speakers'
-		, action='store_true'
-		, help='Omit speakers form listing.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Omit speakers form listing.'
+		, default = False
 	)
 	list_args.add_argument ('-p', '--install-path'
-		, action='store_true'
-		, help='Show path of voice (if installed).'
-		, default=False
+		, action = 'store_true'
+		, help = 'Show path of voice (if installed).'
+		, default = False
 	)
 	list_args.add_argument ('-l', '--language-code'
-		, type=str
-		, help='Only list voices matching this language.'
-		, default='en_GB'
+		, type = str
+		, help = 'Only list voices matching this language.'
+		, default = 'en_GB'
 	)
 	list_args.add_argument ('-i', '--voice-index'
-		, type=int
-		, help='List only specific language voice.'
-		, default=-1
+		, type = int
+		, help = 'List only specific language voice.'
+		, default = -1
 	)
 
 	# Setup preview command and options.
 	preview_args = subparsers.add_parser ('preview'
-		, formatter_class=argparse.RawTextHelpFormatter
-		, add_help=False
+		, formatter_class = argparse.RawTextHelpFormatter
+		, add_help = False
 	)
 	preview_args.add_argument ('-h', '--help'
-		, action='help'
-		, help='Show help message.'
-		, default=False
+		, action = 'help'
+		, help = 'Show help message.'
+		, default = False
 	)
 	preview_args.add_argument ('-v', '--verbose'
-		, action='store_true'
-		, help='Activate verbose logging.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Activate verbose logging.'
+		, default = False
 	)
 	preview_args.add_argument ('-l', '--language-code'
-		, type=str
-		, help='Select language.'
-		, default='en_GB'
+		, type = str
+		, help = 'Select language.'
+		, default = 'en_GB'
 	)
 	preview_args.add_argument ('-i', '--voice-index'
-		, type=int
-		, help='Specific language voice. (defaults to first one)'
-		, default=0
+		, type = int
+		, help = 'Specific language voice. (defaults to first one)'
+		, default = 0
 	)
 	preview_args.add_argument ('-s', '--speaker-index'
-		, type=int
-		, help='Specific language voice speaker. (defaults to first one)'
-		, default=0
+		, type = int
+		, help = 'Specific language voice speaker. (defaults to first one)'
+		, default = 0
 	)
 	preview_args.add_argument ('-D', '--dry-run'
-		, action='store_true'
-		, help='Build URL and simulate download.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Build URL and simulate download.'
+		, default = False
 	)
 
 	# Setup install command and options.
 	install_args = subparsers.add_parser ('install'
-		, formatter_class=argparse.RawTextHelpFormatter
-		, add_help=False
+		, formatter_class = argparse.RawTextHelpFormatter
+		, add_help = False
 	)
 	install_args.add_argument ('-h', '--help'
-		, action='help'
-		, help='Show help message.'
-		, default=False
+		, action = 'help'
+		, help = 'Show help message.'
+		, default = False
 	)
 	install_args.add_argument ('-v', '--verbose'
-		, action='store_true'
-		, help='Activate verbose logging.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Activate verbose logging.'
+		, default = False
 	)
 	install_args.add_argument ('-D', '--dry-run'
-		, action='store_true'
-		, help='Simulate download / install.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Simulate download / install.'
+		, default = False
 	)
 	install_args.add_argument ('language_code'
-		, type=str
-		, help='Select language.'
+		, type = str
+		, help = 'Select language.'
 	)
 	install_args.add_argument ('voice_index'
-		, type=int
-		, help='Specific language voice. (defaults to first one)'
+		, type = int
+		, help = 'Specific language voice. (defaults to first one)'
 	)
 
 	# Setup remove command and options.
 	remove_args = subparsers.add_parser ('remove'
-		, formatter_class=argparse.RawTextHelpFormatter
-		, add_help=False
+		, formatter_class = argparse.RawTextHelpFormatter
+		, add_help = False
 	)
 	remove_args.add_argument ('-h', '--help'
-		, action='help'
-		, help='Show help message.'
-		, default=False
+		, action = 'help'
+		, help = 'Show help message.'
+		, default = False
 	)
 	remove_args.add_argument ('-v', '--verbose'
-		, action='store_true'
-		, help='Activate verbose logging.'
-		, default=False
+		, action = 'store_true'
+		, help = 'Activate verbose logging.'
+		, default = False
 	)
-	remove_args.add_argument ('voice_selector', type=str
-		, help='Selector of voice to search.'
-		, default=''
+	remove_args.add_argument ('voice_selector', type = str
+		, help = 'Selector of voice to search.'
+		, default = ''
 	)
 
 	return parser
 
 
-def main (custom_args, force_debug = False):
+def main (custom_args: list, force_debug: bool = False):
 	"""! Main CLI processing function."""
 	log_level = logging.WARNING
 
