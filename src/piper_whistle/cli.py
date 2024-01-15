@@ -415,8 +415,6 @@ def create_arg_parser (prog: str = 'piper_whistle'):
 
 def main (custom_args: list, force_debug: bool = False):
 	"""! Main CLI processing function."""
-	holz_ready = False
-
 	if not force_debug and '-d' in custom_args:
 		force_debug = True
 
@@ -436,8 +434,6 @@ def main (custom_args: list, force_debug: bool = False):
 		args = parser.parse_args (args = a)
 		holz.debug (f'Got args: {args}')
 	except WhistleArgsParserException as ex:
-		# Setup holz just before handling exception.
-		
 		# So here we are, exception as flow control. It's just very convenient
 		# to be able to identify help requested, since otherwise it seems
 		# I'd have to equip every sub-arg-parser with a reference to the main
