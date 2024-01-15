@@ -118,7 +118,7 @@ def run_docs_cfg (args):
 		return 13
 
 	tmpl = None
-	with open (tmpl_path.as_posix (), 'r') as f:
+	with open (tmpl_path, 'r') as f:
 		tmpl = TmplrFile (f.read ())
 
 	# Stores template values.
@@ -128,7 +128,7 @@ def run_docs_cfg (args):
 
 	# Fill template.
 	tmpl_str = tmpl.substitute (tmpl_subs)
-	with open (out_path.as_posix (), 'w') as f:
+	with open (out_path, 'w') as f:
 		f.write (tmpl_str)
 	
 	print (f'Template ready at "{out_path.as_posix ()}".')
@@ -149,7 +149,7 @@ def run_build_readme (args):
 		return 13
 
 	tmpl = None
-	with open (tmpl_path.as_posix (), 'r') as f:
+	with open (tmpl_path, 'r') as f:
 		tmpl = TmplrFile (f.read ())
 
 	# Stores help texts.
@@ -167,7 +167,7 @@ def run_build_readme (args):
 
 	# Fill template with help texts.
 	tmpl_str = tmpl.substitute (tmpl_subs)
-	with open (out_path.as_posix (), 'w') as f:
+	with open (out_path, 'w') as f:
 		f.write (tmpl_str)
 	
 	print (f'Template ready at "{out_path.as_posix ()}".')

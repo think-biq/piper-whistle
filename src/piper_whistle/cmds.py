@@ -155,7 +155,7 @@ def run_speak (context, args):
 		holz.error (f'No channel at "{p}" found.')
 		return 13
 
-	with open (p.as_posix (), 'w') as f:
+	with open (p, 'w') as f:
 		payload = f'{args.something}'
 		if args.json:
 			j = {'text': payload}
@@ -328,14 +328,17 @@ def run_preview (context, args):
 		holz.error ('Could not find sample for this voice.')
 		return 13
 
+	# Construct path where preview sample are held.
 	p = pathlib.Path (f"{context['paths']['voices']}")
 	p = p.joinpath (f"{download_info['local_path_relative']}")
-	p = p.joinpath (f"{local_voice_path}/samples")
+	p = p.joinpath (f"samples")
 	p = p.resolve ()
+	holz.debug (f'Processing preview in path "{p}" ...')
 
+	# Make sure path exists.
 	p.mkdir (parents=True, exist_ok=True)
 	
-	filename = os.path.basename (speaker_url)
+	filename = util.url_path_split (speaker_url)[-1]
 	file_path = p.joinpath (filename)
 	if file_path.exists ():
 		holz.info ('Cached file detected.')
@@ -401,7 +404,8 @@ def run_install (context, args):
 	holz.info (f'Using voice path at: {p}')
 
 	config_url = download_info['config']['url']
-	config_file_path = p.joinpath (os.path.basename (config_url))
+	config_filename = util.url_path_split (config_url)[-1]
+	config_file_path = p.joinpath (config_filename)
 	if not config_file_path.exists ():
 		size = util.float_round (float (download_info['config']['size']) / 1024)
 		holz.info (f'Fetching config ({size}kb) ...')
@@ -417,9 +421,9 @@ def run_install (context, args):
 		holz.info ('Config already cached.')
 
 	model_url = download_info['model']['url']
-	model_file_name = os.path.basename (model_url)
-	model_name = model_file_name.split ('.')[0]
-	model_file_path = p.joinpath (model_file_name)
+	model_filename = util.url_path_split (model_url)[-1]
+	model_name = model_filename.split ('.')[0]
+	model_file_path = p.joinpath (model_filename)
 	if not model_file_path.exists ():
 		size = util.float_round (
 			float (download_info['model']['size'])

@@ -103,8 +103,8 @@ def create_arg_parser ():
 	return parser
 
 
-def _data_path ():	
-	user_root_path = pathlib.Path (os.path.expanduser ('~'))
+def _data_path ():
+	user_root_path = pathlib.Path ('~').expanduser ()
 	data_path = None
 	if user_root_path.joinpath ('.config').exists ():
 		data_path = user_root_path.joinpath ('.config', 'rota')
@@ -152,7 +152,7 @@ def run_refresh (args):
 	data = json.loads (body.decode ('utf-8'))
 	raw_data = json.dumps (data, indent = 4)
 	bw = 0
-	with open (package_info_path.as_posix (), 'w+') as f:
+	with open (package_info_path, 'w+') as f:
 		f.seek (0)
 		f.truncate ()
 		bw = f.write (raw_data)
@@ -175,7 +175,7 @@ def run_versions (args):
 		return 13
 
 	j = None
-	with open (package_info_path.as_posix (), 'r') as f:
+	with open (package_info_path, 'r') as f:
 		j = json.load (f)
 
 	try:
@@ -238,7 +238,7 @@ def run_fortunae (args):
 		return 13
 
 	j = None
-	with open (package_info_path.as_posix (), 'r') as f:
+	with open (package_info_path, 'r') as f:
 		j = json.load (f)
 
 	if None is args.version_name:
@@ -283,6 +283,7 @@ def run_fortunae (args):
 
 
 def run_bhavacakra (args):
+	'''.'''
 	import modulefinder
 
 	p = pathlib.Path (args.script_path)

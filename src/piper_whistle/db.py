@@ -85,11 +85,11 @@ def remote_repo_config (paths):
 		holz.debug (f'Writing default repo config to "{repo_config_file}" ...')
 		# Make sure data root path exists, in case repo config is the first to use it.
 		repo_config_file.parent.mkdir (parents = True, exist_ok = True)
-		with open (repo_config_file.as_posix (), 'w') as f:
+		with open (repo_config_file, 'w') as f:
 			json.dump (repo, f, indent = 4)
 
 	holz.debug (f'Loading repo config from "{repo_config_file}" ...')
-	with open (repo_config_file.as_posix (), 'r') as f:
+	with open (repo_config_file, 'r') as f:
 		repo = json.load (f)
 
 	return repo
@@ -199,7 +199,8 @@ def assemble_download_info (context, code, voice_i):
 						'md5': voice_details['files'][file]['md5_digest']
 					}
 
-			voice_base_url = os.path.dirname (download_info['model']['url'])
+			# Get voice URL where path is one layer up (omitting model name).
+			voice_base_url = util.url_path_cut (download_info['model']['url'], 1)
 
 			def build_sample_url (base, speaker_name, speaker_id, ext = 'mp3'):
 				return f'{base}/samples/{speaker_name}_{speaker_id}.{ext}'
@@ -395,19 +396,16 @@ def index_download_and_rebuild (paths, repo_info):
 
 				voice_i = voice_i + 1
 
-		with open (os.path.join (paths['data'], 'legal.json'), 'w') as f:
+		dp = pathlib.Path (paths['data'])
+		dp = dp.joinpath ('legal.json')
+		with open (dp, 'w') as f:
 			json.dump (legal, f, indent = 4)
 
 	holz.info ('Regenerating context ...')
 	context = context_create (paths, repo_info)
 
 	"""TODO: consider automatic lookup / best guess of corpus data
-	# corpus licenses lookup
 	# https://raw.githubusercontent.com/coqui-ai/open-speech-corpora/master/README.md
-	corpus_lookup_raw = _fetch_url_raw ('https://raw.githubusercontent.com/coqui-ai/open-speech-corpora/master/README.md')
-	if corpus_lookup_raw:
-		with open (os.path.join (paths['data'], 'corpus-lookup.md'), 'w') as f:
-			f.write (corpus_lookup_raw)
 	"""
 	return context
 
@@ -454,20 +452,23 @@ def context_create (paths, repo_info):
 		'languages': None
 	}
 
-	if not os.path.exists (paths['index']):
+	p_index = pathlib.Path (paths['index'])
+	if not p_index.exists ():
 		holz.error ('No database index found!')
 	else:
-		with open (paths['index'], 'r') as f:
+		with open (p_index, 'r') as f:
 			db['index'] = json.load (f)
 
-	if not os.path.exists (paths['languages']):
+	p_languages = pathlib.Path (paths['languages'])
+	if not p_languages.exists ():
 		holz.error ('No language lookup found!')
 	else:
-		with open (paths['languages'], 'r') as f:
+		with open (p_languages, 'r') as f:
 			db['languages'] = json.load (f)
 
-	lgl_path = os.path.join (paths['data'], 'legal.json')
-	if not os.path.exists (lgl_path):
+	lgl_path = pathlib.Path (paths['data'])
+	lgl_path = lgl_path.joinpath ('legal.json')
+	if not lgl_path.exists ():
 		holz.error ('No legal lookup found!')
 	else:
 		with open (lgl_path, 'r') as f:

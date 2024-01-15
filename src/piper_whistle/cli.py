@@ -468,10 +468,11 @@ def main (custom_args, force_debug = False):
 	# Fetch default paths for config and data storage.
 	paths = None
 	if args.data_root:
-		if not os.path.exists (args.data_root):
-			holz.error (f'Data path not found! ({args.data_root})')
+		root = pathlib.Path (args.data_root)
+		if not root.exists ():
+			holz.error (f'Data path not found! ({root.as_posix ()})')
 			return 1
-		paths = db.data_paths (args.data_root)
+		paths = db.data_paths (root.as_posix ())
 	else:
 		paths = db.data_paths ()
 

@@ -15,9 +15,12 @@ import os
 import pathlib
 import io
 import re
+import pathlib
 import inspect
 import logging
 import unittest
+import math
+import hashlib
 from unittest import TestCase
 from unittest.mock import patch
 from contextlib import redirect_stdout
@@ -26,9 +29,10 @@ from directory_tree import display_tree
 from ..piper_whistle import cli as whistle_cli
 from ..piper_whistle import db as whistle_db
 from ..piper_whistle import holz
+from ..piper_whistle import util
 
 
-DEBUG = False
+DEBUG = True
 
 
 expected_list_languages = """
@@ -107,54 +111,12 @@ def check_if_timestamp (result):
 	return not (m is None)
 
 
-class CliCommandTests (unittest.TestCase):
-	""" Using goofy naming scheme for test case ordering.
-	Suggested here https://stackoverflow.com/a/7085051
-	"""
+class CommonBaseTests (unittest.TestCase):
 	LOG_SETUP_SILENT = True # Whether holz should be silent.
-	LOG = logging.getLogger('CliCommandTests') # Local (class) logger.
-
-	def _get_function_name_of_frame(self, frame_i = 1):
-		funcname = inspect.getframeinfo(sys._getframe(frame_i))[2]
-		return funcname
-
-	def _log_debug(self, msg):
-		funcname = self._get_function_name_of_frame(2)
-		category = self.LOCAL_LOG_DICT[funcname].name
-		holz.debug(msg, category = category, flush = True)
-
-	def _log_info(self, msg):
-		funcname = self._get_function_name_of_frame(2)
-		category = self.LOCAL_LOG_DICT[funcname].name
-		holz.info(msg, category = category, flush = True)
-
-	def _log_warn(self, msg):
-		funcname = self._get_function_name_of_frame(2)
-		category = self.LOCAL_LOG_DICT[funcname].name
-		holz.warn(msg, category = category, flush = True)
-
-	def _log_error(self, msg):
-		funcname = self._get_function_name_of_frame(2)
-		category = self.LOCAL_LOG_DICT[funcname].name
-		holz.error(msg, category = category, flush = True)
-
-	def _run_whistle_main (self, args):
-		cli_output = io.StringIO ()
-		with redirect_stdout (cli_output):
-			with patch.object (sys, 'argv', args):
-				whistle_cli.main (args)
-
-		out_str = cli_output.getvalue ().strip ()
-		return out_str
-
-	def _run_whistle_main_with (self, arg_list_name):
-		out_str = self._run_whistle_main (self.test_arguments[arg_list_name])
-		return out_str
+	LOG = logging.getLogger ('CommonBaseTests') # Local (class) logger.
 
 	@classmethod
-	def setUpClass (cls):
-		# TestCase wide setup (as opposed to individual test based setUp ())
-
+	def setup_logging (cls, overrides = {}):
 		cls.LOCAL_LOG_DICT = {}
 		# Fetch all methods which are supposed to be tests.
 		for funcname in dir (cls):
@@ -176,6 +138,105 @@ class CliCommandTests (unittest.TestCase):
 			, silent = cls.LOG_SETUP_SILENT
 		)
 		holz.normalize (overrides = overrides, silent = cls.LOG_SETUP_SILENT)
+
+	@classmethod
+	def setUpClass (cls):
+		cls.setup_logging ()
+
+	def _get_function_name_of_frame (self, frame_i = 1):
+		funcname = inspect.getframeinfo (sys._getframe (frame_i))[2]
+		return funcname
+
+	def _log_debug (self, msg):
+		funcname = self._get_function_name_of_frame (2)
+		category = self.LOCAL_LOG_DICT[funcname].name
+		holz.debug (msg, category = category, flush = True)
+
+	def _log_info (self, msg):
+		funcname = self._get_function_name_of_frame (2)
+		category = self.LOCAL_LOG_DICT[funcname].name
+		holz.info (msg, category = category, flush = True)
+
+	def _log_warn (self, msg):
+		funcname = self._get_function_name_of_frame (2)
+		category = self.LOCAL_LOG_DICT[funcname].name
+		holz.warn (msg, category = category, flush = True)
+
+	def _log_error (self, msg):
+		funcname = self._get_function_name_of_frame (2)
+		category = self.LOCAL_LOG_DICT[funcname].name
+		holz.error (msg, category = category, flush = True)
+
+
+class ModuleTests (CommonBaseTests):
+	LOG_SETUP_SILENT = True # Whether holz should be silent.
+	LOG = logging.getLogger ('ModuleTests') # Local (class) logger.
+
+	@classmethod
+	def setUpClass (cls):
+		super ().setUpClass ()
+
+	def test_util_url (self):
+		self.assertEqual (
+			util.url_path_cut ('https://earth.beings/make/love/not/war', 2),
+			'https://earth.beings/make/love'
+		)
+
+		self.assertEqual (
+			util.url_path_split ('https://huma.ns/do/have-some.heart'),
+			['do', 'have-some.heart']
+		)
+
+	def test_util_math (self):
+		self.assertEqual (
+			util.float_round ((1 + math.sqrt (5)) / 2.0, 3), 1.618
+		)
+
+	def test_util_dl (self):
+		img_sha1 = '53ca8842dc0d7da37919399bb6ce1ed7577c8cb1'
+		img_url = \
+			f'https://upload.wikimedia.org' \
+			f'/wikipedia/commons/archive/e/ee/' \
+			f'20080317013222!Magna_Carta_(British_Library_Cotton_MS_Augustus_II.106).jpg'
+
+		img_target_file = pathlib.Path (tempfile.mktemp ())
+		self.assertTrue (not img_target_file.exists ())
+		
+		util.download_as_stream_with_progress (img_url, img_target_file.as_posix ())
+		self.assertTrue (img_target_file.exists ())
+
+		img_sha1_local = None
+		with open (img_target_file, 'rb') as f:
+			h = hashlib.sha1 ()
+			h.update (f.read ())
+			img_sha1_local = h.hexdigest ()
+		self.assertEqual (img_sha1_local, img_sha1)
+
+
+class CliCommandTests (CommonBaseTests):
+	""" Using goofy naming scheme for test case ordering.
+	Suggested here https://stackoverflow.com/a/7085051
+	"""
+	LOG_SETUP_SILENT = True # Whether holz should be silent.
+	LOG = logging.getLogger('CliCommandTests') # Local (class) logger.
+
+	def _run_whistle_main (self, args):
+		cli_output = io.StringIO ()
+		with redirect_stdout (cli_output):
+			with patch.object (sys, 'argv', args):
+				whistle_cli.main (args)
+
+		out_str = cli_output.getvalue ().strip ()
+		return out_str
+
+	def _run_whistle_main_with (self, arg_list_name):
+		out_str = self._run_whistle_main (self.test_arguments[arg_list_name])
+		return out_str
+
+	@classmethod
+	def setUpClass (cls):
+		# TestCase wide setup (as opposed to individual test based setUp ())
+		super ().setUpClass ()
 
 		cls.LOG.debug (f'[Setup] Creating environemnt for "{cls}" ...')
 
@@ -219,7 +280,7 @@ class CliCommandTests (unittest.TestCase):
 		self.assertTrue (check_if_timestamp (out_str))
 
 		whistle_paths = whistle_db.data_paths (self.data_root_path.as_posix ())
-		self.assertTrue (os.path.exists (whistle_paths['data']))
+		self.assertTrue (pathlib.Path (whistle_paths['data']).exists ())
 
 	def test_b0_list_languages (self):
 		# Ask whistle to list all available languages.
@@ -269,10 +330,11 @@ class CliCommandTests (unittest.TestCase):
 		self.assertTrue (out_parts[2].endswith (expected_install_voice[2]))
 
 		whistle_paths = whistle_db.data_paths (self.data_root_path.as_posix ())
-		onnx_path = os.path.join (whistle_paths['data']
-			, expected_install_voice[2].replace ('piper-whistle/', '')
+		onnx_path = pathlib.Path (whistle_paths['data'])
+		onnx_path = onnx_path.joinpath (
+			expected_install_voice[2].replace ('piper-whistle/', '')
 		)
-		self.assertTrue (os.path.exists (onnx_path))
+		self.assertTrue (onnx_path.exists ())
 
 	def test_f0_list_installed_voices (self):
 		# Ask whistle to list all installed voices.

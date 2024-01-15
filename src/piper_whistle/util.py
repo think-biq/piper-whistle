@@ -4,14 +4,58 @@
 import sys
 import pathlib
 import requests
+import urllib.parse
 from tqdm import tqdm
 # Append root package to path so it can be called with absolute path.
 sys.path.append (str (pathlib.Path(__file__).resolve().parents[1]))
-# ..
+# Then import whistle module with absolute path.
 from piper_whistle import holz
 
 
-def float_round (x, digits = 2):
+def url_path_cut (url: str, count: int
+	, retain_query : bool = False
+	, retain_fragment : bool = False
+	, retain_params : bool = False
+):
+	"""! Takes a URL and cuts of a certain number of path elements.
+
+	If no path elements left, will return base url, regardless of how many
+	more cuts are requested. You may retain URL elements by setting the
+	retain flags. Otherwise the URL will be simplified to only scheme,
+	host and path.
+
+	@param url String of url to parse.
+	@param retain_query Keeps query part of URL. (default False)
+	@param retain_fragment Keeps fragment part of URL. (default False)
+	@param retain_params Keeps params part of URL. (default False)
+	@return A string of the cut URL.
+	"""
+	purl = urllib.parse.urlparse (url)
+
+	splitpath = purl.path.split ('/')
+	cutpath = '/'.join (splitpath[:-count]) if 1 < len (splitpath) else ''
+	purlmod = urllib.parse.ParseResult (
+		scheme = purl.scheme,
+		netloc = purl.netloc,
+		path = cutpath,
+		query = purl.query if retain_query else '',
+		fragment = purl.fragment if retain_fragment else '',
+		params = purl.params if retain_params else ''
+	)
+
+	return urllib.parse.urlunparse (purlmod)
+
+
+def url_path_split (url : str):
+	"""! Takes a URL and splits the path elements into list elements.
+	@param url String of url to parse.
+	@return A list of parts comprising the path element of the URL.
+	"""
+	purl = urllib.parse.urlparse (url)
+	return purl.path.split ('/')[1:]
+
+
+def float_round (x : float, digits : int = 2):
 	"""! Rounds given number to a specific precision
 	@param x Number to round.
 	@param digits The number of significant digitis to retain. Default is 2.
