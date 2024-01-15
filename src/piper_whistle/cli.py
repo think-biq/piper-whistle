@@ -7,7 +7,6 @@ import sys
 import pathlib
 import argparse
 import logging
-import traceback
 # Append root package to path so it can be called with absolute path.
 sys.path.append (str (pathlib.Path(__file__).resolve().parents[1]))
 # Then import whistle modules via absolute path.
@@ -424,10 +423,10 @@ def main (custom_args: list, force_debug: bool = False):
 	log_level = logging.WARNING
 	if force_debug:
 		log_level = logging.DEBUG
-		holz.activate_flush_always (True)
-		holz.setup_default ('whistle', log_level)
-		holz.normalize (silent = True)
-		holz_ready = True
+
+	holz.activate_flush_always (True)
+	holz.setup_default ('whistle', log_level)
+	holz.normalize (silent = True)
 
 	# Setup and configure argparse parser.
 	parser = create_arg_parser ()
