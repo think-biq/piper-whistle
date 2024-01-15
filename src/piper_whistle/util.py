@@ -68,7 +68,7 @@ def float_round (x : float, digits : int = 2):
 
 
 def download_as_stream_with_progress (
-	url: str, file_path: str, label: str = 'dl'
+	url: str, file_path: str, label: str = 'dl', headers: dict = None
 ):
 	"""! Downloads a resource via streaming get request and shows progress.
 	@param url Target URL to download.
@@ -76,7 +76,11 @@ def download_as_stream_with_progress (
 	@param label Annotation used when printing progress. 'dl' by default.
 	@return Returns number of bytes downloaded, or -1 on error.
 	"""
-	resp = requests.get (url, stream = True)
+	resp = None
+	if headers:
+		resp = requests.get (url, headers = headers, stream = True)
+	else:
+		resp = requests.get (url, stream = True)
 	if not (300 > resp.status_code):
 		holz.error (f'Could not fetch "{url}"! (c: {resp.status_code})')
 		try:

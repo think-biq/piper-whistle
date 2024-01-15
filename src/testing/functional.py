@@ -22,6 +22,7 @@ import math
 import hashlib
 import contextlib
 import directory_tree
+import urllib.parse
 
 from ..piper_whistle import cli as whistle_cli
 from ..piper_whistle import db as whistle_db
@@ -190,16 +191,25 @@ class ModuleTests (CommonBaseTests):
 		)
 
 	def test_util_dl (self):
+		wiki_root = 'upload.wikimedia.org'
+		wiki_path = 'wikipedia/commons/archive/e/ee'
+		wiki_file = urllib.parse.quote (
+			'20080317013222!Magna_Carta_(British_Library_Cotton_MS_Augustus_II.106).jpg'
+		)
+
 		img_sha1 = '53ca8842dc0d7da37919399bb6ce1ed7577c8cb1'
-		img_url = \
-			f'https://upload.wikimedia.org' \
-			f'/wikipedia/commons/archive/e/ee/' \
-			f'20080317013222!Magna_Carta_(British_Library_Cotton_MS_Augustus_II.106).jpg'
+		img_url = f'https://{wiki_root}/{wiki_path}/{wiki_file}'
 
 		img_target_file = pathlib.Path (tempfile.mktemp ())
 		self.assertTrue (not img_target_file.exists ())
 
-		util.download_as_stream_with_progress (img_url, img_target_file)
+		user_agent = \
+			'User-Agent: CoolBot/0.0 ' \
+			'(https://example.org/coolbot/; coolbot@example.org) ' \
+			'generic-library/0.0'
+		util.download_as_stream_with_progress (
+			img_url, img_target_file, headers = {'User-agent': user_agent}
+		)
 		self.assertTrue (img_target_file.exists ())
 
 		img_sha1_local = None
