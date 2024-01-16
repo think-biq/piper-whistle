@@ -5,7 +5,7 @@ Handle version related information.
 # Define in common three component form.
 MAJOR = 1
 MINOR = 6
-PATCH = 208
+PATCH = 213
 
 
 def as_list ():
