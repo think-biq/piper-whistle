@@ -308,6 +308,22 @@ def run_preview (context, args):
 	@param args Processed arguments (prepared by argparse).
 	@return Returns 0 on success, otherwise > 0.
 	"""
+	try:
+		# Suppress playsound's warning message about pygobject.
+		# Has to be done before loading modulde, since the loading code
+		# is producing the log message.
+		import logging
+		holz.setup ('playsound', logging.ERROR)
+
+		# After setup, load the module and play the sound.
+		from playsound import playsound
+	except Exception as ex:
+		holz.error (
+			'Preview auto play needs package "playsound". '
+			'Please install to enable this feature.'
+		)
+		return 23
+
 	dry_run = args.dry_run
 	code = args.language_code
 	voice_i = args.voice_index
@@ -360,14 +376,6 @@ def run_preview (context, args):
 			holz.error ('File not found.')
 			return 13
 
-		# Suppress playsound's warning message about pygobject.
-		# Has to be done before loading modulde, since the loading code
-		# is producing the log message.
-		import logging
-		holz.setup ('playsound', logging.ERROR)
-
-		# After setup, load the module and play the sound.
-		from playsound import playsound
 		# TODO: On linux, this spins up another python instance, which is
 		# not the most convenient way in terms of stopping / cancelling.
 		playsound (file_path.as_posix (), block = True)
