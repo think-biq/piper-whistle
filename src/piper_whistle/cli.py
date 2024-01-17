@@ -31,7 +31,7 @@ HELP_REQUESTED = False
 
 
 class WhistleArgsParserException (Exception):
-	'''.'''
+	"""! Exception raised when argument parser runs into trouble."""
 	LOG = logging.getLogger ('whistle-args-exception')
 
 	def __init__ (self
@@ -54,7 +54,11 @@ class WhistleArgsParserException (Exception):
 
 
 class WhistleArgsParser (argparse.ArgumentParser):
-	'''.'''
+	"""! Custom parser ArgumentParser implementation.
+
+	This allows for implementation custom behavior when default parser would
+	have exited the program (e.g. when showing help message).
+	"""
 	LOG = logging.getLogger ('whistle-args')
 
 	def __init__ (self, *args, **kwargs):

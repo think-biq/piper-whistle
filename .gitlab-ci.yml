@@ -148,6 +148,36 @@ release-gitlab:
         - name: '${WHEEL_FILE_NAME}'
           url: '${WHEEL_FILE_URL}'
 
+sync-github:
+  stage: release
+  rules:
+    # This ensures that only pushes to the release branch trigger sync.
+    - if: $CI_COMMIT_REF_NAME == "release"
+      allow_failure: true
+    # or main branch are considered.
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+  script:
+    - apt-get update -y
+    - apt-get install -yqqf openssh-client sshpass --fix-missing
+    - eval $(ssh-agent -s)
+    - cat "${GITHUB_DEPLOY_KEY_FILE}" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan ${GITHUB_DEPLOY_DOMAIN} >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - git config --global user.email "${GITHUB_USER_EMAIL}"
+    - git config --global user.name "${GITHUB_USER_NAME}"
+    - git fetch --all
+    - git checkout staging
+    - git checkout release
+    - git checkout main
+    - git remote rm origin 2> /dev/null
+    - git remote add origin ${GITHUB_REPO_LINK}
+    - git push --all
+    - git push --tags
+
 release-github:
   stage: release
   rules:
@@ -156,6 +186,7 @@ release-github:
   needs:
     - job: build-wheel
       artifacts: true
+    - job: sync-github
   script:
     - echo Tag name = "${VERSION_TAG}"
     - echo Release name = "piper-whistle ${VERSION_TAG} wheel"
@@ -234,33 +265,3 @@ pages:
     paths:
       # The folder that contains the files to be exposed at the Page URL
       - public
-
-sync:
-  stage: finalize
-  rules:
-    # This ensures that only pushes to the release branch trigger sync.
-    - if: $CI_COMMIT_REF_NAME == "release"
-      allow_failure: true
-    # or main branch are considered.
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-      when: manual
-      allow_failure: true
-  script:
-    - apt-get update -y
-    - apt-get install -yqqf openssh-client sshpass --fix-missing
-    - eval $(ssh-agent -s)
-    - cat "${GITHUB_DEPLOY_KEY_FILE}" | tr -d '\r' | ssh-add - > /dev/null
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan ${GITHUB_DEPLOY_DOMAIN} >> ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
-    - git config --global user.email "${GITHUB_USER_EMAIL}"
-    - git config --global user.name "${GITHUB_USER_NAME}"
-    - git fetch --all
-    - git checkout staging
-    - git checkout release
-    - git checkout main
-    - git remote rm origin 2> /dev/null
-    - git remote add origin ${GITHUB_REPO_LINK}
-    - git push --all
-    - git push --tags

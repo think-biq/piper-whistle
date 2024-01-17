@@ -246,19 +246,18 @@ def assemble_download_info (context, code, voice_i):
 	return None
 
 
-def _fetch_url_raw (url):
+def _fetch_url_raw (url, as_binary = False):
+	"""! Downloads contents of url to temp file, then returns data.
 	"""
-	"""
-	temp = tempfile.NamedTemporaryFile ()
-	temp_path = temp.name
-	temp.close ()
+	temp_path = tempfile.mktemp ()
 
 	r = util.download_as_stream_with_progress (url, temp_path)
 	if 0 < r:
 		holz.debug (f'Finished downloading. "{url}" => "{temp_path}"')
-		with open (temp_path, 'r') as f:
+		with open (temp_path, 'rb' if as_binary else 'r') as f:
 			return f.read ()
 
+	holz.debug (f'Could not finish download succesfully ({r}).')
 	return None
 
 
@@ -381,6 +380,7 @@ def index_download_and_rebuild (paths, repo_info):
 
 	holz.info ('Rebuilding language database ...')
 	langdb = {}
+	holz.debug (f'Processing {len (index)} voices for lookup ...')
 	for voice in index:
 		voice_lang = index[voice]['language']
 		if not (voice_lang['code'] in langdb):
@@ -401,10 +401,12 @@ def index_download_and_rebuild (paths, repo_info):
 	# build legal info based on model cards
 	legal = {}
 	if True:
+		holz.debug ('Building legal information lookup ...')
 		base_url = remote_repo_build_branch_root (repo_info)
 
+		holz.debug (f'Processing {len (langdb)} languages ...')
 		for code in langdb:
-			holz.info (f'Processing "{code}":')
+			holz.info (f'Processing {langdb[code]["voices"]} languages for "{code}":')
 			voice_i = 0
 			for voice_name in langdb[code]['voices']:
 				holz.info (f"\tFetching model card for {voice_i}: {voice_name}")
