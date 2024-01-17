@@ -318,6 +318,7 @@ def run_preview (context, args):
 		# After setup, load the module and play the sound.
 		from playsound import playsound
 	except Exception as ex:
+		holz.debug (ex)
 		holz.error (
 			'Preview auto play needs package "playsound". '
 			'Please install to enable this feature.'
