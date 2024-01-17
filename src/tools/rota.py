@@ -6,11 +6,13 @@ Like listing all version names, or get the wheel URL for manual download.
 """
 # 2023-∞ (c) blurryroots innovation qanat OÜ. All rights reserved.
 import urllib.request
+import urllib.error
 import json
 import pathlib
 import argparse
 import logging
 import datetime
+import time
 from ..piper_whistle import holz
 
 
@@ -95,6 +97,48 @@ def create_arg_parser ():
 	)
 	fotunae_args.add_argument ('script_path', type=str
 		, help='Name of the package for which to show wheel information.'
+		, default=None
+	)
+
+	# Setup gues command and options.
+	github_release_args = subparsers.add_parser ('github-release')
+	github_release_args.add_argument ('-v', '--verbose'
+		, action='store_true'
+		, help='Activate verbose logging.'
+		, default=False
+	)
+	github_release_args.add_argument ('-D', '--draft'
+		, action='store_true'
+		, help='Setup as draft.'
+		, default=False
+	)
+	github_release_args.add_argument ('-P', '--pre-release'
+		, action='store_true'
+		, help='Tag as pre-release.'
+		, default=False
+	)
+	github_release_args.add_argument ('-T', '--token-file', type = str
+		, help = 'Path to the file containig the user token.'
+		, default = 'github-release.token'
+	)
+	github_release_args.add_argument ('-A', '--attachment', type = str
+		, help = 'File to attach to release.'
+		, default = 'github-release.token'
+	)
+	github_release_args.add_argument ('repository', type=str
+		, help='Repository ID in form of "username/project".'
+		, default=None
+	)
+	github_release_args.add_argument ('branch', type=str
+		, help='Branch to lookup commit.'
+		, default=None
+	)
+	github_release_args.add_argument ('tag', type=str
+		, help='Version tag.'
+		, default=None
+	)
+	github_release_args.add_argument ('message', type=str
+		, help='Message body to associate with release.'
 		, default=None
 	)
 
@@ -311,11 +355,105 @@ def run_bhavacakra (args):
 	return 0
 
 
+def _build_create_release_url (username, project):
+	gh_root = 'https://api.github.com/repos'
+	gh_uname = username
+	gh_project = project
+	request_url = f'{gh_root}/{gh_uname}/{gh_project}/releases'
+	return request_url
+
+
+def run_github_release (args):
+	gh_uname = args.repository.split ('/')[0]
+	gh_project = args.repository.split ('/')[1]
+
+	tp = pathlib.Path (args.token_file).resolve ()
+	if not tp.exists ():
+		holz.error (f'Could not find token file at "{tp.as_posix ()}".')
+		return 23
+
+	gh_token = None
+	with open (tp, 'r') as f:
+		gh_token = f.read ().strip ()
+
+	request_url = _build_create_release_url (gh_uname, gh_project)
+	request_headers = {
+	}
+	request_body = {
+		'tag_name': f'{args.tag}',
+		'target_commitish': f'{args.branch}',
+		'name': f'{gh_project} {args.tag} wheel',
+		'body': args.message,
+		'draft': bool (args.draft),
+		'prerelease': bool (args.pre_release),
+		'generate_release_notes': False
+	}
+	request_data = json.dumps (request_body).encode ('utf-8')
+
+	release_info = None
+	try:
+		req = urllib.request.Request (request_url
+			, data = request_data
+		)
+		req.add_header ("Accept", "application/vnd.github+json")
+		req.add_header ("Authorization", f"Bearer {gh_token}")
+		req.add_header ("X-GitHub-Api-Version", "2022-11-28")
+
+		holz.info (f'Creating new release "{request_body["name"]}" ...')
+		with urllib.request.urlopen (req) as response:
+			release_info = json.loads (response.read ().decode ('utf-8'))
+			holz.info (f'New release created at: {release_info["url"]}')
+	except urllib.error.HTTPError as ex:
+		holz.error (ex)
+		holz.error (ex.code)
+		holz.error (ex.reason)
+		holz.error (ex.headers)
+		return 23
+
+	time.sleep (0.66)
+
+	if args.attachment:
+		ap = pathlib.Path (args.attachment)
+		request_url = release_info['upload_url'].replace (
+			'{?name,label}', f'?name={ap.name}'
+		)
+		request_body = None
+		with open (ap, 'rb') as f:
+			request_body = f.read ()
+
+		upload_info = None
+		try:
+			holz.info (f'Uploading "{request_url}" ...')
+			req = urllib.request.Request (request_url
+				, data = request_data
+			)
+			req.add_header ("Accept", "application/vnd.github+json")
+			req.add_header ("Authorization", f"Bearer {gh_token}")
+			req.add_header ("X-GitHub-Api-Version", "2022-11-28")
+			req.add_header ("Content-Type", "application/octet-stream")
+
+			holz.info ('Sending attachment ...')
+			with urllib.request.urlopen (req) as response:
+				upload_info = json.loads (response.read ().decode ('utf-8'))
+				holz.info (upload_info)
+		except urllib.error.HTTPError as ex:
+			holz.error (ex)
+			holz.error (ex.code)
+			holz.error (ex.reason)
+			holz.error (ex.headers)
+			return 23
+
+		holz.info ('Attachment uploaded.')
+
+	return 0
+
+
 commands = {
 	'refresh': run_refresh,
 	'versions': run_versions,
 	'fortunae': run_fortunae,
 	'bhavacakra': run_bhavacakra,
+	'github-release': run_github_release
 }
 
 
