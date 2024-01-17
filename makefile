@@ -9,8 +9,10 @@ audit:
 	pip-audit --desc
 	pip-audit --fix --dry-run
 
-lint:
+lint-gitlab-pipeline:
 	yamllint .gitlab-ci.yml
+
+lint:
 	flake8 \
 		--ignore W191,E211,E128,E203,E124,F541,E402,E251,W504,W503 \
 		"$(PROJECT_DIR)/src/piper_whistle"
