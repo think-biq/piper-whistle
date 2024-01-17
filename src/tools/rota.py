@@ -364,6 +364,10 @@ def _build_create_release_url (username, project):
 
 
 def run_github_release (args):
+	"""! Creates a new release page
+
+	When set, attaches the file pointed at by --attachment
+	"""
 	gh_uname = args.repository.split ('/')[0]
 	gh_project = args.repository.split ('/')[1]
 
@@ -372,6 +376,7 @@ def run_github_release (args):
 		holz.error (f'Could not find token file at "{tp.as_posix ()}".')
 		return 23
 
+	holz.info (f'Reading token from {tp.as_posix ()} ...')
 	gh_token = None
 	with open (tp, 'r') as f:
 		gh_token = f.read ().strip ()
@@ -443,7 +448,14 @@ def run_github_release (args):
 			holz.error (ex.headers)
 			return 23
 
-		holz.info ('Attachment uploaded.')
+		holz.info (f'Finished with state "{upload_info["state"]}".')
+		if 'uploaded' != upload_info["state"]:
+			holz.error (f'Attachment not uploaded ({upload_info["state"]}).')
+			holz.debug (upload_info)
+			return 23
+
+		dl_url = upload_info['browser_download_url']
+		holz.info (f'Attachment uploaded. Ready at: {dl_url}')
 
 	return 0
 
